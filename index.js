@@ -1,20 +1,23 @@
-import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client'
+import { withAccelerate } from '@prisma/extension-accelerate'
+import express from 'express'
 
-const app = express();
-const prisma = new PrismaClient();
+const prisma = new PrismaClient().$extends(withAccelerate())
 
-app.use(express.json());
+const app = express()
+
+app.use(express.json())
+
 app.get('/users', async(req, res) => {
   try {
-    const users = await prisma.user.findMany();
-    res.json(users);
+    const users = await prisma.user.findMany()
+    res.json(users)
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error fetching users:", error)
+    res.status(500).json({ error: "Internal Server Error" })
   }
-});
+})
 
 app.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+  console.log('Server is running on port 3000')
+})
