@@ -1,0 +1,34 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CS3203-Project/backend.git"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CS3203-Project/backend/issues"
+  },
+  "homepage": "https://github.com/CS3203-Project/backend#readme",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^6.12.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.12.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
