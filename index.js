@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import express from 'express'
-import userRoutes from './routes/user.route.js'
+import userRoutes from './src/routes/user.route.js'
 
 const prisma = new PrismaClient().$extends(withAccelerate())
 
