@@ -1,6 +1,7 @@
 
 
 ## Setup Guide
+## 🛑 define .env Before run the npm install 
 
 ## 1. Environment Variables (.env)
 
