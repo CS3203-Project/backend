@@ -10,3 +10,8 @@ export const registerSchema = Joi.object({
   address: Joi.string().optional(),
   phoneNumber: Joi.string().pattern(/^[0-9]{11}$/).optional()
 });
+
+export const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
+});
