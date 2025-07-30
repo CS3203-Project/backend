@@ -49,3 +49,24 @@ export const getProfile = async (userId) => {
   if (!user) throw new Error('User not found');
   return user;
 }
+
+export const updateProfile = async (userId, data) => {
+  const updatedData = {};
+  if (data.firstName) updatedData.firstName = data.firstName;
+  if (data.lastName) updatedData.lastName = data.lastName;
+  if (data.imageUrl) updatedData.imageUrl = data.imageUrl;
+  if (data.location) updatedData.location = data.location;
+  if (data.address) updatedData.address = data.address;
+  if (data.phoneNumber) updatedData.phoneNumber = data.phoneNumber;
+
+  return await prisma.user.update({
+    where: { id: userId },
+    data: updatedData,
+  });
+}
+
+export const deleteProfile = async (userId) => {
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+}

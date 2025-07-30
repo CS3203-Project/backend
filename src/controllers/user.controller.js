@@ -26,3 +26,21 @@ export const getUserProfile = async (req, res, next) => {
     next(err);
   }
 };
+
+export const updateUserProfile = async (req, res, next) => {
+  try {
+    const updatedUser = await userService.updateProfile(req.user.id, req.body);
+    res.status(200).json({ message: 'Profile updated', user: updatedUser });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteUserProfile = async (req, res, next) => {
+  try {
+    await userService.deleteProfile(req.user.id);
+    res.status(200).json({ message: 'Profile deleted' });
+  } catch (err) {
+    next(err);
+  }
+};

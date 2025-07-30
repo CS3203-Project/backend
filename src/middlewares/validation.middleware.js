@@ -12,3 +12,4 @@ export default (schema) => (req, res, next) => {
   console.log('Validation passed');
   next();
 }; 
+

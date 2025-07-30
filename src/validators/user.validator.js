@@ -15,3 +15,12 @@ export const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
+
+export const updateProfileSchema = Joi.object({
+  firstName: Joi.string().optional(),
+  lastName: Joi.string().optional(),
+  imageUrl: Joi.string().uri().optional(),
+  location: Joi.string().optional(),
+  address: Joi.string().optional(),
+  phoneNumber: Joi.string().pattern(/^[0-9]{11}$/).optional()
+});
