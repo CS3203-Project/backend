@@ -2,8 +2,8 @@ import * as userService from '../services/user.service.js';
 
 export const createUser = async (req, res, next) => {
   try {
-            const { email, firstName, lastName, password, imageUrl, location, address, phoneNumber } = req.body;
-            const user = await userService.register({ email, firstName, lastName, password, imageUrl, location, address, phoneNumber });
+            const { email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia } = req.body;
+            const user = await userService.register({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia });
     res.status(201).json({ message: 'User registered', user });
   } catch (err) {
     next(err);

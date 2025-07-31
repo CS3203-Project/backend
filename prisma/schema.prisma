@@ -14,22 +14,155 @@ datasource db {
 }
 
 model User {
-  id        Int   @id @default(autoincrement())
-  email     String @unique
-  firstName String
-  lastName  String
-  password  String
-  imageUrl  String?
-  location  String?
-  address   String?
-  bannerUrl String?
-  phoneNumber String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String             @id @default(cuid())
+  email           String             @unique
+  password        String
+  role            String             @default("USER") // USER, PROVIDER, ADMIN
+  isActive        Boolean            @default(true)
+  firstName       String?
+  lastName        String?
+  phone           String?
+  imageUrl        String?
+  location        String?
+  address         String?
+  isEmailVerified Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  lastLoginAt     DateTime?
+  socialmedia     String[]
+
+  serviceProvider ServiceProvider?
+  schedules       Schedule[]
+  payments        Payment[]
+  reviewsWritten  Review[]           @relation("writtenReviews")
+  serviceReviewsWritten ServiceReview[] @relation("writtenServiceReviews")
 }
 
-model gig {
-  id        Int   @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ServiceProvider {
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id])
+
+  bio            String?
+  skills         String[]
+  qualifications String[]
+  logoUrl        String?
+  averageRating  Float?
+  totalReviews   Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  companies      Company[]
+  services       Service[]
+  schedules      Schedule[]
+  payments       Payment[]
+  reviews        Review[]     @relation("receivedReviews")
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  providerId  String
+  name        String?
+  description String?
+  logo        String?
+  address     String?
+  contact     String?
+  socialmedia String[]
+
+  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String?
+  slug        String     @unique
+  description String?
+  parentId    String?
+
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  services    Service[]
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  providerId  String
+  categoryId  String
+  title       String?
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  currency    String    @default("USD")
+  tags        String[]
+  images      String[]
+  isActive    Boolean   @default(true)
+  workingTime String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+  category    Category        @relation(fields: [categoryId], references: [id])
+  schedules   Schedule[]
+  payments    Payment[]
+  reviews     ServiceReview[]
+}
+
+model Schedule {
+  id         String   @id @default(cuid())
+  serviceId  String
+  providerId String
+  userId     String
+  startTime  String
+  endTime    String
+  confirm    Boolean  @default(false)
+  queueValue Int?
+
+  service    Service        @relation(fields: [serviceId],  references: [id])
+  provider   ServiceProvider @relation(fields: [providerId], references: [id])
+  user       User           @relation(fields: [userId],     references: [id])
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  serviceId     String
+  providerId    String
+  userId        String
+  gateway       String?
+  chargeId      String   @unique
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String
+  status        String?
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  failureReason String?
+  createdAt     DateTime @default(now())
+
+  service    Service        @relation(fields: [serviceId],  references: [id])
+  provider   ServiceProvider @relation(fields: [providerId], references: [id])
+  user       User           @relation(fields: [userId],     references: [id])
+}
+
+model Review {
+  id          String           @id @default(cuid())
+  reviewerId  String
+  revieweeId  String
+  rating      Int
+  comment     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  reviewer    User             @relation("writtenReviews",   fields: [reviewerId], references: [id])
+  reviewee    ServiceProvider  @relation("receivedReviews",  fields: [revieweeId], references: [id])
+}
+
+model ServiceReview {
+  id          String      @id @default(cuid())
+  reviewerId  String
+  serviceId   String
+  rating      Int
+  comment     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  reviewer    User        @relation("writtenServiceReviews", fields: [reviewerId], references: [id])
+  service     Service     @relation(fields: [serviceId], references: [id])
 }

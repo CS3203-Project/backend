@@ -5,7 +5,14 @@ import { comparePassword, hashPassword } from '../utils/hash.js';
 
 const prisma = new PrismaClient();
 
-export const register = async ({ email, firstName, lastName, password, imageUrl, location, address, phoneNumber }) => {
+export const register = async ({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia }) => {
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    const err = new Error('Email already exists. Please use a different email address.');
+    err.name = 'BadRequestError'; 
+    err.status = 400; 
+    throw err;
+  }
   const hashedPassword = await hashPassword(password);
   return await prisma.user.create({
     data: {
@@ -16,7 +23,8 @@ export const register = async ({ email, firstName, lastName, password, imageUrl,
       imageUrl,
       location,
       address,
-      phoneNumber,
+      phone,
+      socialmedia,
     },
   });
 };
@@ -43,7 +51,8 @@ export const getProfile = async (userId) => {
       imageUrl: true,
       location: true,
       address: true,
-      phoneNumber: true,
+      phone: true,
+      socialmedia: true,
     },
   });
   if (!user) throw new Error('User not found');
@@ -57,7 +66,8 @@ export const updateProfile = async (userId, data) => {
   if (data.imageUrl) updatedData.imageUrl = data.imageUrl;
   if (data.location) updatedData.location = data.location;
   if (data.address) updatedData.address = data.address;
-  if (data.phoneNumber) updatedData.phoneNumber = data.phoneNumber;
+  if (data.phone) updatedData.phone = data.phone;
+  if (data.socialmedia) updatedData.socialmedia = data.socialmedia;
 
   return await prisma.user.update({
     where: { id: userId },

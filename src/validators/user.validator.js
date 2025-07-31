@@ -8,7 +8,8 @@ export const registerSchema = Joi.object({
   imageUrl: Joi.string().uri().optional(),
   location: Joi.string().optional(),
   address: Joi.string().optional(),
-  phoneNumber: Joi.string().pattern(/^[0-9]{11}$/).optional()
+  phone: Joi.string().pattern(/^[0-9]{11}$/).optional(),
+  socialmedia: Joi.array().items(Joi.string()).optional()
 });
 
 export const loginSchema = Joi.object({
@@ -22,5 +23,6 @@ export const updateProfileSchema = Joi.object({
   imageUrl: Joi.string().uri().optional(),
   location: Joi.string().optional(),
   address: Joi.string().optional(),
-  phoneNumber: Joi.string().pattern(/^[0-9]{11}$/).optional()
+  phone: Joi.string().pattern(/^[0-9]{11}$/).optional(),
+  socialmedia: Joi.array().items(Joi.string()).optional()
 });
