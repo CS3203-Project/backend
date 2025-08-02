@@ -80,3 +80,8 @@ export const deleteProfile = async (userId) => {
     where: { id: userId },
   });
 }
+
+export const checkEmailExists = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  return !!user;
+}

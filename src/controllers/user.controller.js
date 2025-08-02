@@ -9,6 +9,20 @@ export const createUser = async (req, res, next) => {
     next(err);
   }
 };
+
+export const checkEmailExists = async (req, res, next) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    const exists = await userService.checkEmailExists(email);
+    res.status(200).json({ exists });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const loginUser = async (req, res) => {
     try {
     const result = await userService.login(req.body);

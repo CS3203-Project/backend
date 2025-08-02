@@ -13,11 +13,21 @@ try {
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import express from 'express';
+import cors from 'cors';
 import userRoutes from './src/routes/user.route.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
 const app = express();
+
+// CORS configuration
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // Allow both frontend and backend origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Allow cookies if needed
+}));
+
 app.use(express.json());
 app.use('/api/users', userRoutes);
 
