@@ -46,6 +46,7 @@ export const getProfile = async (userId) => {
     select: {
       id: true,
       email: true,
+      role: true,
       firstName: true,
       lastName: true,
       imageUrl: true,
@@ -53,6 +54,49 @@ export const getProfile = async (userId) => {
       address: true,
       phone: true,
       socialmedia: true,
+      createdAt: true,
+      isEmailVerified: true,
+      serviceProvider: {
+        select: {
+          id: true,
+          bio: true,
+          skills: true,
+          qualifications: true,
+          logoUrl: true,
+          averageRating: true,
+          totalReviews: true,
+          services: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              price: true,
+              currency: true,
+              images: true,
+              isActive: true
+            }
+          },
+          reviews: {
+            select: {
+              id: true,
+              rating: true,
+              comment: true,
+              createdAt: true,
+              reviewer: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  imageUrl: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 10
+          }
+        }
+      }
     },
   });
   if (!user) throw new Error('User not found');

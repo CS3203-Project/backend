@@ -15,6 +15,7 @@ import { withAccelerate } from '@prisma/extension-accelerate';
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './src/routes/user.route.js';
+import providerRoutes from './src/routes/provider.route.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
@@ -30,6 +31,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use('/api/users', userRoutes);
+app.use('/api/providers', providerRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
