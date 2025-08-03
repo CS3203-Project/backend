@@ -178,6 +178,11 @@ export const getProviderProfile = async (userId) => {
           isEmailVerified: true
         }
       },
+      companies: {
+        orderBy: {
+          id: 'desc'
+        }
+      },
       services: {
         select: {
           id: true,
