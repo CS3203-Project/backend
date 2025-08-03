@@ -51,6 +51,8 @@ model ServiceProvider {
   totalReviews   Int?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  isVerified     Boolean      @default(false)
+  IDCardUrl     String?
 
   companies      Company[]
   services       Service[]
