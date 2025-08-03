@@ -52,7 +52,7 @@ model ServiceProvider {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   isVerified     Boolean      @default(false)
-  IDCardUrl     String?
+  IDCardUrl      String       // Required ID card image URL
 
   companies      Company[]
   services       Service[]

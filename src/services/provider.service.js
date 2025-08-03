@@ -30,6 +30,7 @@ export const createProvider = async (userId, providerData) => {
         skills: providerData.skills || [],
         qualifications: providerData.qualifications || [],
         logoUrl: providerData.logoUrl,
+        IDCardUrl: providerData.IDCardUrl,
       },
       include: {
         user: {
@@ -64,6 +65,7 @@ export const updateProvider = async (userId, providerData) => {
   if (providerData.skills !== undefined) updatedData.skills = providerData.skills;
   if (providerData.qualifications !== undefined) updatedData.qualifications = providerData.qualifications;
   if (providerData.logoUrl !== undefined) updatedData.logoUrl = providerData.logoUrl;
+  if (providerData.IDCardUrl !== undefined) updatedData.IDCardUrl = providerData.IDCardUrl;
 
   const updatedProvider = await prisma.serviceProvider.update({
     where: { userId },
