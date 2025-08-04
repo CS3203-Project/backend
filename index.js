@@ -17,6 +17,8 @@ import cors from 'cors';
 import userRoutes from './src/routes/user.route.js';
 import providerRoutes from './src/routes/provider.route.js';
 import companyRoutes from './src/routes/company.route.js';
+import servicesRoutes from './src/routes/services.route.js';
+import categoryRoutes from './src/routes/catagory.route.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
@@ -34,6 +36,8 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/categories', categoryRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
