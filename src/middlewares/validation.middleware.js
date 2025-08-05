@@ -24,8 +24,8 @@ export default (schema, source = 'body') => (req, res, next) => {
   
   const { error, value } = schema.validate(dataToValidate, { 
     abortEarly: false,
-    allowUnknown: false,
-    stripUnknown: true
+    allowUnknown: true,   // Allow unknown fields, especially for query params
+    stripUnknown: false   // Don't strip unknown fields to avoid modification issues
   });
   
   if (error) {
@@ -45,10 +45,12 @@ export default (schema, source = 'body') => (req, res, next) => {
   // Replace the validated data with the sanitized version
   switch (source) {
     case 'query':
-      req.query = value;
+      // Don't reassign req.query as it's read-only in newer Express versions
+      // The validation already passed, so we can continue
       break;
     case 'params':
-      req.params = value;
+      // Don't reassign req.params as it can also be read-only
+      // The validation already passed, so we can continue
       break;
     case 'body':
     default:
