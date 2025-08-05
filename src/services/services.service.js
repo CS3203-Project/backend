@@ -140,7 +140,7 @@ export const getServices = async (filters = {}) => {
         category: true,
         reviews: {
           include: {
-            user: {
+            reviewer: {
               select: {
                 firstName: true,
                 lastName: true
@@ -185,7 +185,7 @@ export const getServiceById = async (serviceId) => {
         category: true,
         reviews: {
           include: {
-            user: {
+            reviewer: {
               select: {
                 firstName: true,
                 lastName: true
