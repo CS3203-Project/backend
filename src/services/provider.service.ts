@@ -2,7 +2,24 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const createProvider = async (userId, providerData) => {
+// Type definitions
+interface ProviderCreateData {
+  bio?: string;
+  skills?: string[];
+  qualifications?: string[];
+  logoUrl?: string;
+  IDCardUrl?: string;
+}
+
+interface ProviderUpdateData {
+  bio?: string;
+  skills?: string[];
+  qualifications?: string[];
+  logoUrl?: string;
+  IDCardUrl?: string;
+}
+
+export const createProvider = async (userId: string, providerData: ProviderCreateData) => {
   // Check if user exists and doesn't already have a provider profile
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -50,7 +67,7 @@ export const createProvider = async (userId, providerData) => {
   return newProvider;
 };
 
-export const updateProvider = async (userId, providerData) => {
+export const updateProvider = async (userId: string, providerData: ProviderUpdateData) => {
   // Check if user has a provider profile
   const existingProvider = await prisma.serviceProvider.findUnique({
     where: { userId }
@@ -60,7 +77,7 @@ export const updateProvider = async (userId, providerData) => {
     throw new Error('Service provider profile not found');
   }
 
-  const updatedData = {};
+  const updatedData: any = {};
   if (providerData.bio !== undefined) updatedData.bio = providerData.bio;
   if (providerData.skills !== undefined) updatedData.skills = providerData.skills;
   if (providerData.qualifications !== undefined) updatedData.qualifications = providerData.qualifications;
@@ -117,7 +134,7 @@ export const updateProvider = async (userId, providerData) => {
   return updatedProvider;
 };
 
-export const deleteProvider = async (userId) => {
+export const deleteProvider = async (userId: string) => {
   // Check if user has a provider profile
   const existingProvider = await prisma.serviceProvider.findUnique({
     where: { userId },
@@ -158,7 +175,7 @@ export const deleteProvider = async (userId) => {
   return { message: 'Service provider profile deleted successfully' };
 };
 
-export const getProviderProfile = async (userId) => {
+export const getProviderProfile = async (userId: string) => {
   const provider = await prisma.serviceProvider.findUnique({
     where: { userId },
     include: {

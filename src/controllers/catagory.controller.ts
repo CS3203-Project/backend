@@ -1,9 +1,10 @@
-import * as categoryService from '../services/catagory.service.js';
+import type { Request, Response, NextFunction } from 'express';
+import * as categoryService from '../services/category.service.js';
 
 /**
  * Create a new category
  */
-export const createCategory = async (req, res, next) => {
+export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const categoryData = req.body;
     const newCategory = await categoryService.createCategory(categoryData);
@@ -21,10 +22,10 @@ export const createCategory = async (req, res, next) => {
 /**
  * Get all categories with optional filtering
  */
-export const getCategories = async (req, res, next) => {
+export const getCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const filters = {
-      parentId: req.query.parentId,
+      parentId: req.query.parentId as string | null,
       includeChildren: req.query.includeChildren !== 'false',
       includeParent: req.query.includeParent !== 'false',
       includeServices: req.query.includeServices === 'true'
@@ -45,7 +46,7 @@ export const getCategories = async (req, res, next) => {
 /**
  * Get category by ID
  */
-export const getCategoryById = async (req, res, next) => {
+export const getCategoryById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const options = {
@@ -54,7 +55,7 @@ export const getCategoryById = async (req, res, next) => {
       includeServices: req.query.includeServices === 'true'
     };
 
-    const category = await categoryService.getCategoryById(id, options);
+    const category = await categoryService.getCategoryById(id!, options);
     
     if (!category) {
       return res.status(404).json({
@@ -76,7 +77,7 @@ export const getCategoryById = async (req, res, next) => {
 /**
  * Get category by slug
  */
-export const getCategoryBySlug = async (req, res, next) => {
+export const getCategoryBySlug = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { slug } = req.params;
     const options = {
@@ -85,7 +86,7 @@ export const getCategoryBySlug = async (req, res, next) => {
       includeServices: req.query.includeServices === 'true'
     };
 
-    const category = await categoryService.getCategoryBySlug(slug, options);
+    const category = await categoryService.getCategoryBySlug(slug!, options);
     
     if (!category) {
       return res.status(404).json({
@@ -107,12 +108,12 @@ export const getCategoryBySlug = async (req, res, next) => {
 /**
  * Update category
  */
-export const updateCategory = async (req, res, next) => {
+export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
-    const updatedCategory = await categoryService.updateCategory(id, updateData);
+    const updatedCategory = await categoryService.updateCategory(id!, updateData);
     
     res.status(200).json({
       success: true,
@@ -127,14 +128,14 @@ export const updateCategory = async (req, res, next) => {
 /**
  * Delete category
  */
-export const deleteCategory = async (req, res, next) => {
+export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const options = {
       force: req.query.force === 'true'
     };
 
-    const deletedCategory = await categoryService.deleteCategory(id, options);
+    const deletedCategory = await categoryService.deleteCategory(id!, options);
     
     res.status(200).json({
       success: true,
@@ -149,7 +150,7 @@ export const deleteCategory = async (req, res, next) => {
 /**
  * Get root categories (categories with no parent)
  */
-export const getRootCategories = async (req, res, next) => {
+export const getRootCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const options = {
       includeChildren: req.query.includeChildren !== 'false'
@@ -170,11 +171,11 @@ export const getRootCategories = async (req, res, next) => {
 /**
  * Get category hierarchy
  */
-export const getCategoryHierarchy = async (req, res, next) => {
+export const getCategoryHierarchy = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
-    const hierarchy = await categoryService.getCategoryHierarchy(id);
+    const hierarchy = await categoryService.getCategoryHierarchy(id!);
     
     if (!hierarchy) {
       return res.status(404).json({
@@ -196,7 +197,7 @@ export const getCategoryHierarchy = async (req, res, next) => {
 /**
  * Search categories
  */
-export const searchCategories = async (req, res, next) => {
+export const searchCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q: searchTerm } = req.query;
     
@@ -212,7 +213,7 @@ export const searchCategories = async (req, res, next) => {
       includeParent: req.query.includeParent !== 'false'
     };
 
-    const categories = await categoryService.searchCategories(searchTerm, options);
+    const categories = await categoryService.searchCategories(searchTerm as string, options);
     
     res.status(200).json({
       success: true,
