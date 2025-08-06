@@ -40,5 +40,8 @@
     "noUncheckedSideEffectImports": false,
     "moduleDetection": "force",
     "skipLibCheck": true,
+  },
+  "ts-node": {
+    "esm": true
   }
 }
