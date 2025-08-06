@@ -1,9 +1,10 @@
+import type { Request, Response, NextFunction } from 'express';
 import * as serviceService from '../services/services.service.js';
 
 /**
  * Create a new service
  */
-export const createService = async (req, res, next) => {
+export const createService = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const serviceData = req.body;
     const newService = await serviceService.createService(serviceData);
@@ -21,15 +22,17 @@ export const createService = async (req, res, next) => {
 /**
  * Get all services with optional filtering
  */
-export const getServices = async (req, res, next) => {
+export const getServices = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const filters = {
-      providerId: req.query.providerId,
-      categoryId: req.query.categoryId,
-      isActive: req.query.isActive ? req.query.isActive === 'true' : undefined,
-      skip: req.query.skip ? parseInt(req.query.skip) : 0,
-      take: req.query.take ? parseInt(req.query.take) : 10
+    const filters: any = {
+      providerId: req.query.providerId as string,
+      categoryId: req.query.categoryId as string,
+      skip: req.query.skip ? parseInt(req.query.skip as string) : 0,
+      take: req.query.take ? parseInt(req.query.take as string) : 10
     };
+    if (typeof req.query.isActive !== 'undefined') {
+      filters.isActive = req.query.isActive === 'true';
+    }
 
     const services = await serviceService.getServices(filters);
     
@@ -50,10 +53,10 @@ export const getServices = async (req, res, next) => {
 /**
  * Get a single service by ID
  */
-export const getServiceById = async (req, res, next) => {
+export const getServiceById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const service = await serviceService.getServiceById(id);
+    const service = await serviceService.getServiceById(id!);
     
     if (!service) {
       return res.status(404).json({
@@ -75,12 +78,12 @@ export const getServiceById = async (req, res, next) => {
 /**
  * Update a service
  */
-export const updateService = async (req, res, next) => {
+export const updateService = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
     
-    const updatedService = await serviceService.updateService(id, updateData);
+    const updatedService = await serviceService.updateService(id!, updateData);
     
     res.status(200).json({
       success: true,
@@ -95,11 +98,11 @@ export const updateService = async (req, res, next) => {
 /**
  * Delete a service
  */
-export const deleteService = async (req, res, next) => {
+export const deleteService = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     
-    await serviceService.deleteService(id);
+    await serviceService.deleteService(id!);
     
     res.status(200).json({
       success: true,

@@ -2,22 +2,34 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Type definitions
+interface ServiceCreateData {
+  providerId: string;
+  categoryId: string;
+  title?: string;
+  description?: string;
+  price: number;
+  currency?: string;
+  tags?: string[];
+  images?: string[];
+  isActive?: boolean;
+  workingTime?: string[];
+}
+
+interface ServiceFilters {
+  providerId?: string;
+  categoryId?: string;
+  isActive?: boolean;
+  skip?: number;
+  take?: number;
+}
+
 /**
  * Create a new service
- * @param {Object} serviceData - The service data
- * @param {string} serviceData.providerId - ID of the service provider
- * @param {string} serviceData.categoryId - ID of the service category
- * @param {string} [serviceData.title] - Service title
- * @param {string} [serviceData.description] - Service description
- * @param {number} serviceData.price - Service price
- * @param {string} [serviceData.currency="USD"] - Currency (defaults to USD)
- * @param {string[]} [serviceData.tags=[]] - Array of tags
- * @param {string[]} [serviceData.images=[]] - Array of image URLs
- * @param {boolean} [serviceData.isActive=true] - Service active status
- * @param {string[]} [serviceData.workingTime=[]] - Array of working time slots
+ * @param {ServiceCreateData} serviceData - The service data
  * @returns {Promise<Object>} Created service object
  */
-export const createService = async (serviceData) => {
+export const createService = async (serviceData: ServiceCreateData) => {
   try {
     const {
       providerId,
@@ -105,7 +117,7 @@ export const createService = async (serviceData) => {
  * @param {number} [filters.take=10] - Number of records to take for pagination
  * @returns {Promise<Object[]>} Array of service objects
  */
-export const getServices = async (filters = {}) => {
+export const getServices = async (filters: ServiceFilters = {}) => {
   try {
     const {
       providerId,
@@ -115,7 +127,7 @@ export const getServices = async (filters = {}) => {
       take = 10
     } = filters;
 
-    const whereClause = {};
+    const whereClause: any = {};
     
     if (providerId) whereClause.providerId = providerId;
     if (categoryId) whereClause.categoryId = categoryId;
@@ -165,7 +177,7 @@ export const getServices = async (filters = {}) => {
  * @param {string} serviceId - The service ID
  * @returns {Promise<Object|null>} Service object or null if not found
  */
-export const getServiceById = async (serviceId) => {
+export const getServiceById = async (serviceId: string) => {
   try {
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
@@ -209,7 +221,7 @@ export const getServiceById = async (serviceId) => {
  * @param {Object} updateData - Data to update
  * @returns {Promise<Object>} Updated service object
  */
-export const updateService = async (serviceId, updateData) => {
+export const updateService = async (serviceId: string, updateData: Partial<ServiceCreateData>) => {
   try {
     const service = await prisma.service.findUnique({
       where: { id: serviceId }
@@ -249,7 +261,7 @@ export const updateService = async (serviceId, updateData) => {
  * @param {string} serviceId - The service ID
  * @returns {Promise<Object>} Deleted service object
  */
-export const deleteService = async (serviceId) => {
+export const deleteService = async (serviceId: string) => {
   try {
     const service = await prisma.service.findUnique({
       where: { id: serviceId }

@@ -12,17 +12,17 @@ try {
 
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
-import express from 'express';
+import express, { type Application } from 'express';
 import cors from 'cors';
 import userRoutes from './src/routes/user.route.js';
 import providerRoutes from './src/routes/provider.route.js';
 import companyRoutes from './src/routes/company.route.js';
 import servicesRoutes from './src/routes/services.route.js';
-import categoryRoutes from './src/routes/catagory.route.js';
+import categoryRoutes from './src/routes/category.route.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
-const app = express();
+const app: Application = express();
 
 // CORS configuration
 app.use(cors({
@@ -39,5 +39,5 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/categories', categoryRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT: number = parseInt(process.env.PORT || '3000', 10);
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
