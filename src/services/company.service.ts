@@ -2,7 +2,26 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const createCompany = async (userId, companyData) => {
+// Type definitions
+interface CompanyCreateData {
+  name: string;
+  description?: string;
+  logo?: string;
+  address?: string;
+  contact?: string;
+  socialmedia?: any;
+}
+
+interface CompanyUpdateData {
+  name?: string;
+  description?: string;
+  logo?: string;
+  address?: string;
+  contact?: string;
+  socialmedia?: any;
+}
+
+export const createCompany = async (userId: string, companyData: CompanyCreateData) => {
   // Check if user is a verified provider
   const provider = await prisma.serviceProvider.findUnique({
     where: { userId },
@@ -32,7 +51,7 @@ export const createCompany = async (userId, companyData) => {
   return company;
 };
 
-export const updateCompany = async (userId, companyId, companyData) => {
+export const updateCompany = async (userId: string, companyId: string, companyData: CompanyUpdateData) => {
   // Check if user owns this company
   const provider = await prisma.serviceProvider.findUnique({
     where: { userId },
@@ -51,7 +70,7 @@ export const updateCompany = async (userId, companyId, companyData) => {
     throw new Error('Company not found or you do not have permission to update it');
   }
 
-  const updatedData = {};
+  const updatedData: any = {};
   if (companyData.name !== undefined) updatedData.name = companyData.name;
   if (companyData.description !== undefined) updatedData.description = companyData.description;
   if (companyData.logo !== undefined) updatedData.logo = companyData.logo;
@@ -67,7 +86,7 @@ export const updateCompany = async (userId, companyId, companyData) => {
   return company;
 };
 
-export const deleteCompany = async (userId, companyId) => {
+export const deleteCompany = async (userId: string, companyId: string) => {
   // Check if user owns this company
   const provider = await prisma.serviceProvider.findUnique({
     where: { userId },
@@ -91,7 +110,7 @@ export const deleteCompany = async (userId, companyId) => {
   });
 };
 
-export const getCompanies = async (userId) => {
+export const getCompanies = async (userId: string) => {
   const provider = await prisma.serviceProvider.findUnique({
     where: { userId },
     include: {

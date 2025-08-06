@@ -5,10 +5,38 @@ import { comparePassword, hashPassword } from '../utils/hash.js';
 
 const prisma = new PrismaClient();
 
-export const register = async ({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia }) => {
+// Type definitions
+interface UserRegistrationData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  imageUrl?: string;
+  location?: string;
+  address?: string;
+  phone?: string;
+  socialmedia?: any;
+}
+
+interface UserUpdateData {
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
+  location?: string;
+  address?: string;
+  phone?: string;
+  socialmedia?: any;
+}
+
+// Extend Error interface to include status property
+interface ErrorWithStatus extends Error {
+  status?: number;
+}
+
+export const register = async ({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia }: UserRegistrationData) => {
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    const err = new Error('Email already exists. Please use a different email address.');
+    const err = new Error('Email already exists. Please use a different email address.') as ErrorWithStatus;
     err.name = 'BadRequestError'; 
     err.status = 400; 
     throw err;
@@ -29,7 +57,7 @@ export const register = async ({ email, firstName, lastName, password, imageUrl,
   });
 };
 
-export const login = async ({ email, password }) => {
+export const login = async ({ email, password }: { email: string; password: string }) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('User not found');
 
@@ -40,7 +68,7 @@ export const login = async ({ email, password }) => {
   return { token, user };
 };
 
-export const getProfile = async (userId) => {
+export const getProfile = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -103,8 +131,8 @@ export const getProfile = async (userId) => {
   return user;
 }
 
-export const updateProfile = async (userId, data) => {
-  const updatedData = {};
+export const updateProfile = async (userId: string, data: UserUpdateData) => {
+  const updatedData: any = {};
   if (data.firstName) updatedData.firstName = data.firstName;
   if (data.lastName) updatedData.lastName = data.lastName;
   if (data.imageUrl) updatedData.imageUrl = data.imageUrl;
@@ -119,13 +147,13 @@ export const updateProfile = async (userId, data) => {
   });
 }
 
-export const deleteProfile = async (userId) => {
+export const deleteProfile = async (userId: string) => {
   await prisma.user.delete({
     where: { id: userId },
   });
 }
 
-export const checkEmailExists = async (email) => {
+export const checkEmailExists = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   return !!user;
 }
