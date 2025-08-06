@@ -2,16 +2,69 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Type definitions
+interface CategoryCreateData {
+  name?: string;
+  slug: string;
+  description?: string;
+  parentId?: string;
+}
+
+interface CategoryUpdateData {
+  name?: string;
+  slug?: string;
+  description?: string;
+  parentId?: string;
+}
+
+interface CategoryFilters {
+  parentId?: string | null;
+  includeChildren?: boolean;
+  includeParent?: boolean;
+  includeServices?: boolean;
+}
+
+interface CategoryOptions {
+  includeChildren?: boolean;
+  includeParent?: boolean;
+  includeServices?: boolean;
+}
+
+interface DeleteOptions {
+  force?: boolean;
+}
+
+interface SearchOptions {
+  includeChildren?: boolean;
+  includeParent?: boolean;
+}
+
+interface RootCategoryOptions {
+  includeChildren?: boolean;
+}
+
+// Custom error class for better error handling
+class CustomError extends Error {
+  status?: number;
+  
+  constructor(message: string, status?: number, name = 'Error') {
+    super(message);
+    this.status = status;
+    this.name = name;
+  }
+}
+
+// Extend Error interface to include status property
+interface ErrorWithStatus extends Error {
+  status?: number;
+}
+
 /**
  * Create a new category
- * @param {Object} categoryData - The category data
- * @param {string} [categoryData.name] - Category name
- * @param {string} categoryData.slug - Unique slug for the category
- * @param {string} [categoryData.description] - Category description
- * @param {string} [categoryData.parentId] - Parent category ID for hierarchical structure
+ * @param {CategoryCreateData} categoryData - The category data
  * @returns {Promise<Object>} Created category object
  */
-export const createCategory = async (categoryData) => {
+export const createCategory = async (categoryData: CategoryCreateData) => {
   try {
     const { name, slug, description, parentId } = categoryData;
 
@@ -25,7 +78,7 @@ export const createCategory = async (categoryData) => {
       where: { slug }
     });
     if (existingCategory) {
-      const err = new Error('Category with this slug already exists');
+      const err = new Error('Category with this slug already exists') as ErrorWithStatus;
       err.name = 'BadRequestError';
       err.status = 400;
       throw err;
@@ -74,7 +127,7 @@ export const createCategory = async (categoryData) => {
 
     return newCategory;
   } catch (error) {
-    throw new Error(`Failed to create category: ${error.message}`);
+    throw new Error(`Failed to create category: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 
@@ -87,7 +140,14 @@ export const createCategory = async (categoryData) => {
  * @param {boolean} [filters.includeServices=false] - Include services count
  * @returns {Promise<Array>} Array of category objects
  */
-export const getAllCategories = async (filters = {}) => {
+interface CategoryFilters {
+  parentId?: string | null;
+  includeChildren?: boolean;
+  includeParent?: boolean;
+  includeServices?: boolean;
+}
+
+export const getAllCategories = async (filters: CategoryFilters = {}) => {
   try {
     const { 
       parentId, 
@@ -96,7 +156,7 @@ export const getAllCategories = async (filters = {}) => {
       includeServices = false 
     } = filters;
 
-    const whereClause = {};
+    const whereClause: any = {};
     if (parentId !== undefined) {
       whereClause.parentId = parentId;
     }
@@ -145,7 +205,7 @@ export const getAllCategories = async (filters = {}) => {
  * @param {boolean} [options.includeServices=false] - Include services
  * @returns {Promise<Object|null>} Category object or null if not found
  */
-export const getCategoryById = async (id, options = {}) => {
+export const getCategoryById = async (id: string, options: CategoryOptions = {}) => {
   try {
     const { 
       includeChildren = true, 
@@ -205,7 +265,7 @@ export const getCategoryById = async (id, options = {}) => {
  * @param {boolean} [options.includeServices=false] - Include services
  * @returns {Promise<Object|null>} Category object or null if not found
  */
-export const getCategoryBySlug = async (slug, options = {}) => {
+export const getCategoryBySlug = async (slug: string, options: CategoryOptions = {}) => {
   try {
     const { 
       includeChildren = true, 
@@ -266,7 +326,7 @@ export const getCategoryBySlug = async (slug, options = {}) => {
  * @param {string} [updateData.parentId] - Parent category ID
  * @returns {Promise<Object>} Updated category object
  */
-export const updateCategory = async (id, updateData) => {
+export const updateCategory = async (id: string, updateData: CategoryUpdateData) => {
   try {
     const { name, slug, description, parentId } = updateData;
 
@@ -284,7 +344,7 @@ export const updateCategory = async (id, updateData) => {
         where: { slug }
       });
       if (slugExists) {
-        const err = new Error('Category with this slug already exists');
+        const err = new Error('Category with this slug already exists') as ErrorWithStatus;
         err.name = 'BadRequestError';
         err.status = 400;
         throw err;
@@ -356,7 +416,7 @@ export const updateCategory = async (id, updateData) => {
  * @param {boolean} [options.force=false] - Force delete even if category has children or services
  * @returns {Promise<Object>} Deleted category object
  */
-export const deleteCategory = async (id, options = {}) => {
+export const deleteCategory = async (id: string, options: DeleteOptions = {}) => {
   try {
     const { force = false } = options;
 
@@ -416,7 +476,7 @@ export const deleteCategory = async (id, options = {}) => {
  * @param {boolean} [options.includeChildren=true] - Include children categories
  * @returns {Promise<Array>} Array of root category objects
  */
-export const getRootCategories = async (options = {}) => {
+export const getRootCategories = async (options: RootCategoryOptions = {}) => {
   try {
     const { includeChildren = true } = options;
 
@@ -436,7 +496,7 @@ export const getRootCategories = async (options = {}) => {
  * @param {string} categoryId - Starting category ID
  * @returns {Promise<Object>} Category with full hierarchy
  */
-export const getCategoryHierarchy = async (categoryId) => {
+export const getCategoryHierarchy = async (categoryId: string) => {
   try {
     const category = await prisma.category.findUnique({
       where: { id: categoryId },
@@ -474,7 +534,7 @@ export const getCategoryHierarchy = async (categoryId) => {
  * @param {string} newParentId - New parent category ID
  * @returns {Promise<boolean>} True if circular reference would be created
  */
-const checkCircularReference = async (categoryId, newParentId) => {
+const checkCircularReference = async (categoryId: string, newParentId: string): Promise<boolean> => {
   let currentParentId = newParentId;
   
   while (currentParentId) {
@@ -502,7 +562,7 @@ const checkCircularReference = async (categoryId, newParentId) => {
  * @param {boolean} [options.includeParent=true] - Include parent category info
  * @returns {Promise<Array>} Array of matching categories
  */
-export const searchCategories = async (searchTerm, options = {}) => {
+export const searchCategories = async (searchTerm: string, options: SearchOptions = {}) => {
   try {
     const { includeChildren = true, includeParent = true } = options;
 

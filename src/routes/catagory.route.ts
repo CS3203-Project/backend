@@ -11,7 +11,7 @@ import {
   getRootCategories,
   getCategoryHierarchy,
   searchCategories
-} from '../controllers/catagory.controller.js';
+} from '../controllers/category.controller.js';
 
 import validate from '../middlewares/validation.middleware.js';
 import {
@@ -21,7 +21,7 @@ import {
   categorySlugSchema,
   searchCategoriesSchema,
   categoryQuerySchema
-} from '../validators/catagory.validator.js';
+} from '../validators/category.validator.js';
 
 import authMiddleware from '../middlewares/auth.middleware.js';
 

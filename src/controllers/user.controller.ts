@@ -1,6 +1,7 @@
+import type { Request, Response, NextFunction } from 'express';
 import * as userService from '../services/user.service.js';
 
-export const createUser = async (req, res, next) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
             const { email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia } = req.body;
             const user = await userService.register({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia });
@@ -10,49 +11,49 @@ export const createUser = async (req, res, next) => {
   }
 };
 
-export const checkEmailExists = async (req, res, next) => {
+export const checkEmailExists = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email } = req.query;
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
-    const exists = await userService.checkEmailExists(email);
+    const exists = await userService.checkEmailExists(email as string);
     res.status(200).json({ exists });
   } catch (err) {
     next(err);
   }
 };
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (req: Request, res: Response) => {
     try {
     const result = await userService.login(req.body);
     res.status(200).json({ message: 'Login successful', ...result });
-  } catch (err) {
+  } catch (err: any) {
     res.status(401).json({ message: err.message });
   }
 };
 
-export const getUserProfile = async (req, res, next) => {
+export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await userService.getProfile(req.user.id);
+    const user = await userService.getProfile((req as any).user.id);
     res.status(200).json(user);
   } catch (err) {
     next(err);
   }
 };
 
-export const updateUserProfile = async (req, res, next) => {
+export const updateUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const updatedUser = await userService.updateProfile(req.user.id, req.body);
+    const updatedUser = await userService.updateProfile((req as any).user.id, req.body);
     res.status(200).json({ message: 'Profile updated', user: updatedUser });
   } catch (err) {
     next(err);
   }
 };
 
-export const deleteUserProfile = async (req, res, next) => {
+export const deleteUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await userService.deleteProfile(req.user.id);
+    await userService.deleteProfile((req as any).user.id);
     res.status(200).json({ message: 'Profile deleted' });
   } catch (err) {
     next(err);
