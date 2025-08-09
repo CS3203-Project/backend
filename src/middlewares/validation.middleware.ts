@@ -1,9 +1,11 @@
+import type { Request, Response, NextFunction } from 'express';
+
 /**
  * Validation middleware that can validate different parts of the request
  * @param {Object} schema - Joi validation schema
  * @param {string} source - Source to validate: 'body', 'query', 'params' (default: 'body')
  */
-export default (schema, source = 'body') => (req, res, next) => {
+export default (schema: any, source = 'body') => (req: Request, res: Response, next: NextFunction) => {
   console.log(`=== Validation Middleware (${source}) ===`);
   
   let dataToValidate;
@@ -35,7 +37,7 @@ export default (schema, source = 'body') => (req, res, next) => {
     return res.status(400).json({ 
       success: false,
       message: 'Validation failed',
-      errors: error.details.map(detail => ({
+      errors: error.details.map((detail: any) => ({
         field: detail.path.join('.'),
         message: detail.message
       }))
