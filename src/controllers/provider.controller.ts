@@ -42,3 +42,12 @@ export const getProviderProfile = async (req: Request, res: Response, next: Next
     next(err);
   }
 };
+
+export const getProviderById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const provider = await providerService.getProviderById(req.params.id);
+    res.status(200).json(provider);
+  } catch (err) {
+    next(err);
+  }
+};
