@@ -243,3 +243,57 @@ export const getProviderProfile = async (userId: string) => {
 
   return provider;
 };
+
+export const getProviderById = async (id: string) => {
+  const provider = await prisma.serviceProvider.findUnique({
+    where: { id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          imageUrl: true,
+          role: true
+        }
+      },
+      services: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          price: true,
+          currency: true,
+          images: true,
+          isActive: true
+        }
+      },
+      reviews: {
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          reviewer: {
+            select: {
+              firstName: true,
+              lastName: true,
+              imageUrl: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 10
+      }
+    }
+  });
+
+  if (!provider) {
+    throw new Error('Service provider not found');
+  }
+
+  return provider;
+};
