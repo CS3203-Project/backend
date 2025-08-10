@@ -15,3 +15,7 @@ export const updateProviderSchema = Joi.object({
   logoUrl: Joi.string().uri().optional(),
   IDCardUrl: Joi.string().uri().optional() // Optional for updates
 });
+
+export const providerParamsSchema = Joi.object({
+  id: Joi.string().required()
+});
