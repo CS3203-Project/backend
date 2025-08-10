@@ -157,3 +157,24 @@ export const checkEmailExists = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   return !!user;
 }
+
+export const searchUsers = async (query: string) => {
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { firstName: { contains: query, mode: 'insensitive' } },
+        { lastName: { contains: query, mode: 'insensitive' } },
+        { email: { contains: query, mode: 'insensitive' } },
+      ],
+    },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      imageUrl: true,
+    },
+    take: 20, // Limit results to prevent performance issues
+  });
+  return users;
+}
