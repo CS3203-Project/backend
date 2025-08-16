@@ -19,6 +19,7 @@ import { providerRoutes } from './src/modules/provider/index.js';
 import { companyRoutes } from './src/modules/company/index.js';
 import { servicesRoutes } from './src/modules/service/index.js';
 import { categoryRoutes } from './src/modules/category/index.js';
+import { errorHandler } from './src/modules/shared/index.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
@@ -38,6 +39,9 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/categories', categoryRoutes);
+
+// Global error handler (should be last middleware)
+app.use(errorHandler);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
