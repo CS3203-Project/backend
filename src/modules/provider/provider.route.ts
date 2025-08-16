@@ -6,10 +6,10 @@ import {
   deleteProvider, 
   getProviderProfile, 
   getProviderById
-} from '../controllers/provider.controller.js';
-import validate from '../middlewares/validation.middleware.js';
-import { createProviderSchema, updateProviderSchema, providerParamsSchema } from '../validators/provider.validator.js';
-import authMiddleware from '../middlewares/auth.middleware.js';
+} from './provider.controller.js';
+import validate from '../shared/middlewares/validation.middleware.js';
+import { createProviderSchema, updateProviderSchema, providerParamsSchema } from './provider.validator.js';
+import authMiddleware from '../shared/middlewares/auth.middleware.js';
 
 router.post('/', authMiddleware, validate(createProviderSchema), createProvider);
 router.get('/profile', authMiddleware, getProviderProfile);

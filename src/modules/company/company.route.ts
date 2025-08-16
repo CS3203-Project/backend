@@ -1,8 +1,8 @@
 import express from 'express';
-import * as companyController from '../controllers/company.controller.js';
-import authMiddleware from '../middlewares/auth.middleware.js';
-import validationMiddleware from '../middlewares/validation.middleware.js';
-import { createCompanySchema, updateCompanySchema } from '../validators/company.validator.js';
+import * as companyController from './company.controller.js';
+import authMiddleware from '../shared/middlewares/auth.middleware.js';
+import validationMiddleware from '../shared/middlewares/validation.middleware.js';
+import { createCompanySchema, updateCompanySchema } from './company.validator.js';
 
 const router = express.Router();
 

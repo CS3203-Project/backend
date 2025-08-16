@@ -5,15 +5,15 @@ import {
   getServiceById,
   updateService,
   deleteService
-} from '../controllers/services.controller.js';
-import validate from '../middlewares/validation.middleware.js';
+} from './services.controller.js';
+import validate from '../shared/middlewares/validation.middleware.js';
 import {
   createServiceSchema,
   updateServiceSchema,
   getServicesQuerySchema,
   serviceIdSchema
-} from '../validators/services.validator.js';
-import authMiddleware from '../middlewares/auth.middleware.js';
+} from './services.validator.js';
+import authMiddleware from '../shared/middlewares/auth.middleware.js';
 
 const router = Router();
 

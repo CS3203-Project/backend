@@ -1,9 +1,9 @@
 import { Router } from 'express';
 const router = Router();
-import { createUser,loginUser,getUserProfile,updateUserProfile,deleteUserProfile,checkEmailExistsController,searchUsersController} from '../controllers/user.controller.js';
-import validate from '../middlewares/validation.middleware.js';
-import { registerSchema,loginSchema,updateProfileSchema } from '../validators/user.validator.js';
-import authMiddleware from '../middlewares/auth.middleware.js';
+import { createUser,loginUser,getUserProfile,updateUserProfile,deleteUserProfile,checkEmailExistsController,searchUsersController} from './user.controller.js';
+import validate from '../shared/middlewares/validation.middleware.js';
+import { registerSchema,loginSchema,updateProfileSchema } from './user.validator.js';
+import authMiddleware from '../shared/middlewares/auth.middleware.js';
 
 router.get('/check-email', checkEmailExistsController);
 router.get('/search', authMiddleware, searchUsersController);

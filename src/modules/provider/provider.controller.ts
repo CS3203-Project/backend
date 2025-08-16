@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as providerService from '../services/provider.service.js';
+import * as providerService from './provider.service.js';
 
 export const createProvider = async (req: Request, res: Response, next: NextFunction) => {
   try {

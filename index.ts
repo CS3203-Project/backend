@@ -14,11 +14,12 @@ import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import express, { type Application } from 'express';
 import cors from 'cors';
-import userRoutes from './src/routes/user.route.js';
-import providerRoutes from './src/routes/provider.route.js';
-import companyRoutes from './src/routes/company.route.js';
-import servicesRoutes from './src/routes/services.route.js';
-import categoryRoutes from './src/routes/category.route.js';
+import { userRoutes } from './src/modules/user/index.js';
+import { providerRoutes } from './src/modules/provider/index.js';
+import { companyRoutes } from './src/modules/company/index.js';
+import { servicesRoutes } from './src/modules/service/index.js';
+import { categoryRoutes } from './src/modules/category/index.js';
+import { errorHandler } from './src/modules/shared/index.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
@@ -38,6 +39,9 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/categories', categoryRoutes);
+
+// Global error handler (should be last middleware)
+app.use(errorHandler);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers } from '../services/user.service.js';
+import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers } from './user.service.js';
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {

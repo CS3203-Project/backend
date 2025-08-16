@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as companyService from '../services/company.service.js';
+import * as companyService from './company.service.js';
 
 export const createCompany = async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as serviceService from '../services/services.service.js';
+import * as serviceService from './services.service.js';
 
 /**
  * Create a new service

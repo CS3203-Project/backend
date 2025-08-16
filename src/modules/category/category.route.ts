@@ -11,9 +11,9 @@ import {
   getRootCategories,
   getCategoryHierarchy,
   searchCategories
-} from '../controllers/category.controller.js';
+} from './category.controller.js';
 
-import validate from '../middlewares/validation.middleware.js';
+import validate from '../shared/middlewares/validation.middleware.js';
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -21,9 +21,9 @@ import {
   categorySlugSchema,
   searchCategoriesSchema,
   categoryQuerySchema
-} from '../validators/category.validator.js';
+} from './category.validator.js';
 
-import authMiddleware from '../middlewares/auth.middleware.js';
+import authMiddleware from '../shared/middlewares/auth.middleware.js';
 
 // Public routes (no authentication required)
 /**
