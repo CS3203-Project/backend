@@ -14,11 +14,11 @@ import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import express, { type Application } from 'express';
 import cors from 'cors';
-import userRoutes from './src/routes/user.route.js';
-import providerRoutes from './src/routes/provider.route.js';
-import companyRoutes from './src/routes/company.route.js';
-import servicesRoutes from './src/routes/services.route.js';
-import categoryRoutes from './src/routes/category.route.js';
+import { userRoutes } from './src/modules/user/index.js';
+import { providerRoutes } from './src/modules/provider/index.js';
+import { companyRoutes } from './src/modules/company/index.js';
+import { servicesRoutes } from './src/modules/service/index.js';
+import { categoryRoutes } from './src/modules/category/index.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 

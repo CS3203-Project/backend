@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import * as categoryService from '../services/category.service.js';
+import * as categoryService from './category.service.js';
 
 /**
  * Create a new category
@@ -20,22 +20,24 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
 };
 
 /**
- * Get all categories with optional filtering
+ * Get categories with optional filtering
  */
 export const getCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { parentId, includeChildren, includeParent, includeServices } = req.query;
+    
     const filters = {
-      parentId: req.query.parentId as string | null,
-      includeChildren: req.query.includeChildren !== 'false',
-      includeParent: req.query.includeParent !== 'false',
-      includeServices: req.query.includeServices === 'true'
+      ...(parentId && { parentId: parentId as string }),
+      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' }),
+      ...(includeParent !== undefined && { includeParent: includeParent === 'true' }),
+      ...(includeServices !== undefined && { includeServices: includeServices === 'true' })
     };
 
     const categories = await categoryService.getAllCategories(filters);
     
     res.status(200).json({
       success: true,
-      message: 'Categories retrieved successfully',
+      message: 'Categories fetched successfully',
       data: categories
     });
   } catch (error) {
@@ -49,13 +51,22 @@ export const getCategories = async (req: Request, res: Response, next: NextFunct
 export const getCategoryById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const { includeChildren, includeParent, includeServices } = req.query;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category ID is required'
+      });
+    }
+    
     const options = {
-      includeChildren: req.query.includeChildren !== 'false',
-      includeParent: req.query.includeParent !== 'false',
-      includeServices: req.query.includeServices === 'true'
+      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' }),
+      ...(includeParent !== undefined && { includeParent: includeParent === 'true' }),
+      ...(includeServices !== undefined && { includeServices: includeServices === 'true' })
     };
 
-    const category = await categoryService.getCategoryById(id!, options);
+    const category = await categoryService.getCategoryById(id, options);
     
     if (!category) {
       return res.status(404).json({
@@ -66,7 +77,7 @@ export const getCategoryById = async (req: Request, res: Response, next: NextFun
 
     res.status(200).json({
       success: true,
-      message: 'Category retrieved successfully',
+      message: 'Category fetched successfully',
       data: category
     });
   } catch (error) {
@@ -80,13 +91,22 @@ export const getCategoryById = async (req: Request, res: Response, next: NextFun
 export const getCategoryBySlug = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { slug } = req.params;
+    const { includeChildren, includeParent, includeServices } = req.query;
+    
+    if (!slug) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category slug is required'
+      });
+    }
+    
     const options = {
-      includeChildren: req.query.includeChildren !== 'false',
-      includeParent: req.query.includeParent !== 'false',
-      includeServices: req.query.includeServices === 'true'
+      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' }),
+      ...(includeParent !== undefined && { includeParent: includeParent === 'true' }),
+      ...(includeServices !== undefined && { includeServices: includeServices === 'true' })
     };
 
-    const category = await categoryService.getCategoryBySlug(slug!, options);
+    const category = await categoryService.getCategoryBySlug(slug, options);
     
     if (!category) {
       return res.status(404).json({
@@ -97,7 +117,7 @@ export const getCategoryBySlug = async (req: Request, res: Response, next: NextF
 
     res.status(200).json({
       success: true,
-      message: 'Category retrieved successfully',
+      message: 'Category fetched successfully',
       data: category
     });
   } catch (error) {
@@ -113,7 +133,14 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
     const { id } = req.params;
     const updateData = req.body;
 
-    const updatedCategory = await categoryService.updateCategory(id!, updateData);
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category ID is required'
+      });
+    }
+
+    const updatedCategory = await categoryService.updateCategory(id, updateData);
     
     res.status(200).json({
       success: true,
@@ -131,11 +158,20 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const { force } = req.query;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category ID is required'
+      });
+    }
+    
     const options = {
-      force: req.query.force === 'true'
+      ...(force !== undefined && { force: force === 'true' })
     };
 
-    const deletedCategory = await categoryService.deleteCategory(id!, options);
+    const deletedCategory = await categoryService.deleteCategory(id, options);
     
     res.status(200).json({
       success: true,
@@ -148,20 +184,22 @@ export const deleteCategory = async (req: Request, res: Response, next: NextFunc
 };
 
 /**
- * Get root categories (categories with no parent)
+ * Get root categories
  */
 export const getRootCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { includeChildren } = req.query;
+    
     const options = {
-      includeChildren: req.query.includeChildren !== 'false'
+      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' })
     };
 
-    const rootCategories = await categoryService.getRootCategories(options);
+    const categories = await categoryService.getRootCategories(options);
     
     res.status(200).json({
       success: true,
-      message: 'Root categories retrieved successfully',
-      data: rootCategories
+      message: 'Root categories fetched successfully',
+      data: categories
     });
   } catch (error) {
     next(error);
@@ -175,7 +213,14 @@ export const getCategoryHierarchy = async (req: Request, res: Response, next: Ne
   try {
     const { id } = req.params;
 
-    const hierarchy = await categoryService.getCategoryHierarchy(id!);
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category ID is required'
+      });
+    }
+
+    const hierarchy = await categoryService.getCategoryHierarchy(id);
     
     if (!hierarchy) {
       return res.status(404).json({
@@ -186,7 +231,7 @@ export const getCategoryHierarchy = async (req: Request, res: Response, next: Ne
 
     res.status(200).json({
       success: true,
-      message: 'Category hierarchy retrieved successfully',
+      message: 'Category hierarchy fetched successfully',
       data: hierarchy
     });
   } catch (error) {
@@ -200,8 +245,9 @@ export const getCategoryHierarchy = async (req: Request, res: Response, next: Ne
 export const searchCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q: searchTerm } = req.query;
+    const { includeChildren, includeParent } = req.query;
     
-    if (!searchTerm) {
+    if (!searchTerm || typeof searchTerm !== 'string') {
       return res.status(400).json({
         success: false,
         message: 'Search term is required'
@@ -209,17 +255,16 @@ export const searchCategories = async (req: Request, res: Response, next: NextFu
     }
 
     const options = {
-      includeChildren: req.query.includeChildren !== 'false',
-      includeParent: req.query.includeParent !== 'false'
+      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' }),
+      ...(includeParent !== undefined && { includeParent: includeParent === 'true' })
     };
 
-    const categories = await categoryService.searchCategories(searchTerm as string, options);
+    const categories = await categoryService.searchCategories(searchTerm, options);
     
     res.status(200).json({
       success: true,
-      message: 'Search completed successfully',
-      data: categories,
-      searchTerm
+      message: 'Categories search completed',
+      data: categories
     });
   } catch (error) {
     next(error);
