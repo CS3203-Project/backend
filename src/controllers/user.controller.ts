@@ -104,3 +104,21 @@ export const searchUsersController = async (req: Request, res: Response, next: N
     next(err);
   }
 };
+
+export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    // Upload image to S3
+    const imageUrl = await uploadToS3(req.file, 'uploads');
+    
+    res.status(200).json({ 
+      message: 'Image uploaded successfully',
+      imageUrl 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
