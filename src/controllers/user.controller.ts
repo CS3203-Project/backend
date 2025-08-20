@@ -48,12 +48,12 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
     let imageUrl = req.body.imageUrl;
     
     // If a new image file is uploaded, upload it to S3
-    if (req.file) {
+    if ((req as any).file) {
       // Get current user to check if they have an existing image
       const currentUser = await getProfile((req as any).user.id);
       
       // Upload new image to S3
-      imageUrl = await uploadToS3(req.file, 'profile-images');
+      imageUrl = await uploadToS3((req as any).file, 'profile-images');
       
       // Delete old image if it exists and is from S3
       if (currentUser.imageUrl && currentUser.imageUrl.includes('amazonaws.com')) {
@@ -107,12 +107,12 @@ export const searchUsersController = async (req: Request, res: Response, next: N
 
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.file) {
+    if (!(req as any).file) {
       return res.status(400).json({ message: 'No image file provided' });
     }
 
     // Upload image to S3
-    const imageUrl = await uploadToS3(req.file, 'uploads');
+    const imageUrl = await uploadToS3((req as any).file, 'uploads');
     
     res.status(200).json({ 
       message: 'Image uploaded successfully',

@@ -148,7 +148,7 @@ model Payment {
   user       User           @relation(fields: [userId],     references: [id])
 }
 
-model Review {
+model Review {    // for rating customers
   id          String           @id @default(cuid())
   reviewerId  String
   revieweeId  String
