@@ -36,6 +36,11 @@ model User {
   payments        Payment[]
   reviewsWritten  Review[]           @relation("writtenReviews")
   serviceReviewsWritten ServiceReview[] @relation("writtenServiceReviews")
+  emailQueue      EmailQueue[]       // Added relation to EmailQueue
+
+  //new relations for masseging system
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
 }
 
 model ServiceProvider {
@@ -167,4 +172,56 @@ model ServiceReview {
 
   reviewer    User        @relation("writtenServiceReviews", fields: [reviewerId], references: [id])
   service     Service     @relation(fields: [serviceId], references: [id])
+}
+
+// the following 2 is related to email service
+// Queue of emails to be sent asynchronously
+model EmailQueue {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User?       @relation(fields: [userId], references: [id])
+  to        String
+  subject   String
+  html      String      @db.Text
+  emailType EmailType
+  sentAt    DateTime?
+  createdAt DateTime    @default(now())
+
+  @@map("email_queue")
+  @@index([userId])
+  @@index([emailType])
+  @@index([sentAt])
+}
+
+enum EmailType {
+  BOOKING_CONFIRMATION               @map("BOOKING_CONFIRMATION")
+  BOOKING_REMINDER                   @map("BOOKING_REMINDER")
+  BOOKING_CANCELLATION_MODIFICATION  @map("BOOKING_CANCELLATION_MODIFICATION")
+  NEW_MESSAGE_OR_REVIEW              @map("NEW_MESSAGE_OR_REVIEW")
+  OTHER                              @map("OTHER")
+
+  @@map("EmailType")
+}
+
+//Messaging
+model Conversation {
+  id       String   @id @default(uuid())
+  userIds  String[] // exactly 2 user IDs (sender + receiver)
+  title    String?  
+
+  messages Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  content        String
+  fromId         String       // sender userId
+  toId           String       // receiver userId
+  conversationId String
+  createdAt      DateTime     @default(now())
+  receivedAt     DateTime?
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  from           User         @relation("MessagesSent", fields: [fromId], references: [id])
+  to             User         @relation("MessagesReceived", fields: [toId], references: [id])
 }
