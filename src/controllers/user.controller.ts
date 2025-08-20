@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers } from '../services/user.service.js';
+import { uploadToS3, deleteFromS3 } from '../utils/s3.js';
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -44,7 +45,38 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
 
 export const updateUserProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const updatedUser = await updateProfile((req as any).user.id, req.body);
+    let imageUrl = req.body.imageUrl;
+    
+    // If a new image file is uploaded, upload it to S3
+    if (req.file) {
+      // Get current user to check if they have an existing image
+      const currentUser = await getProfile((req as any).user.id);
+      
+      // Upload new image to S3
+      imageUrl = await uploadToS3(req.file, 'profile-images');
+      
+      // Delete old image if it exists and is from S3
+      if (currentUser.imageUrl && currentUser.imageUrl.includes('amazonaws.com')) {
+        await deleteFromS3(currentUser.imageUrl);
+      }
+    }
+    
+    const updateData = { ...req.body };
+    if (imageUrl) {
+      updateData.imageUrl = imageUrl;
+    }
+    
+    // Parse socialmedia if it's a JSON string
+    if (updateData.socialmedia && typeof updateData.socialmedia === 'string') {
+      try {
+        updateData.socialmedia = JSON.parse(updateData.socialmedia);
+      } catch (e) {
+        // If parsing fails, treat it as an array with single item
+        updateData.socialmedia = [updateData.socialmedia];
+      }
+    }
+    
+    const updatedUser = await updateProfile((req as any).user.id, updateData);
     res.status(200).json({ message: 'Profile updated', user: updatedUser });
   } catch (err) {
     next(err);
