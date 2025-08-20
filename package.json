@@ -6,14 +6,15 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node index.ts",
-    "dev": "npm run build && node dist/index.js"
+    "dev": "npm run build && node dist/index.js",
+    "seed": "npm run build && node dist/prisma/seed.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CS3203-Project/backend.git"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "npm run build && node dist/prisma/seed.js"
   },
   "author": "",
   "license": "ISC",
