@@ -13,7 +13,7 @@
     "url": "git+https://github.com/CS3203-Project/backend.git"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "node --loader ts-node/esm prisma/seed.ts"
   },
   "author": "",
   "license": "ISC",
