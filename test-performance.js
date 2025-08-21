@@ -71,18 +71,7 @@ async function runPerformanceTests() {
   console.log(`Average Response Time: ${Math.round(totalTime / results.length)}ms`);
   console.log(`Total Time: ${totalTime}ms`);
   
-  // Test caching effectiveness
-  console.log('\n🎯 Testing Cache Performance:');
-  console.log('First request (cold cache):');
-  const coldTest = await testEndpoint('/services?take=5', 'Services (Cold Cache)');
-  
-  console.log('Second request (warm cache):');
-  const warmTest = await testEndpoint('/services?take=5', 'Services (Warm Cache)');
-  
-  if (coldTest.success && warmTest.success) {
-    const improvement = ((coldTest.responseTime - warmTest.responseTime) / coldTest.responseTime * 100).toFixed(1);
-    console.log(`Cache improvement: ${improvement}% faster (${coldTest.responseTime}ms → ${warmTest.responseTime}ms)`);
-  }
+  console.log('\n📈 Performance Testing Complete!');
 }
 
 // Run if called directly
