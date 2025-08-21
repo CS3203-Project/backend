@@ -32,6 +32,11 @@ model User {
   serviceProvider       ServiceProvider?
   serviceReviewsWritten ServiceReview[]  @relation("writtenServiceReviews")
   emailQueue            EmailQueue[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
 }
 
 model ServiceProvider {
@@ -53,6 +58,11 @@ model ServiceProvider {
   schedules      Schedule[]
   services       Service[]
   user           User       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isVerified])
+  @@index([averageRating])
+  @@index([createdAt])
 }
 
 model Company {
@@ -97,6 +107,12 @@ model Service {
   category    Category        @relation(fields: [categoryId], references: [id])
   provider    ServiceProvider @relation(fields: [providerId], references: [id])
   reviews     ServiceReview[]
+
+  @@index([providerId])
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([price])
+  @@index([createdAt])
 }
 
 model Schedule {

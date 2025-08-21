@@ -2,10 +2,9 @@ import { Router } from 'express';
 import { createAdminUser } from '../controllers/user.controller.js';
 import validate from '../middlewares/validation.middleware.js';
 import { registerSchema } from '../validators/user.validator.js';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/database.js';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Middleware to check if any admin exists
 const checkNoAdminExists = async (req: any, res: any, next: any) => {
