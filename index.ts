@@ -19,6 +19,7 @@ import providerRoutes from './src/routes/provider.route.js';
 import companyRoutes from './src/routes/company.route.js';
 import servicesRoutes from './src/routes/services.route.js';
 import categoryRoutes from './src/routes/category.route.js';
+import adminRoutes from './src/routes/admin.route.js';
 
 const prisma = new PrismaClient().$extends(withAccelerate()); 
 
@@ -38,6 +39,7 @@ app.use('/api/providers', providerRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -297,3 +297,82 @@ export const getProviderById = async (id: string) => {
 
   return provider;
 };
+
+export const verifyProvider = async (providerId: string) => {
+  // Check if provider exists
+  const existingProvider = await prisma.serviceProvider.findUnique({
+    where: { id: providerId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
+  });
+
+  if (!existingProvider) {
+    throw new Error('Service provider not found');
+  }
+
+  if (existingProvider.isVerified) {
+    throw new Error('Service provider is already verified');
+  }
+
+  // Update verification status
+  const verifiedProvider = await prisma.serviceProvider.update({
+    where: { id: providerId },
+    data: { isVerified: true },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
+  });
+
+  return verifiedProvider;
+};
+
+export const unverifyProvider = async (providerId: string) => {
+  // Check if provider exists
+  const existingProvider = await prisma.serviceProvider.findUnique({
+    where: { id: providerId }
+  });
+
+  if (!existingProvider) {
+    throw new Error('Service provider not found');
+  }
+
+  if (!existingProvider.isVerified) {
+    throw new Error('Service provider is already unverified');
+  }
+
+  // Update verification status
+  const unverifiedProvider = await prisma.serviceProvider.update({
+    where: { id: providerId },
+    data: { isVerified: false },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true
+        }
+      }
+    }
+  });
+
+  return unverifiedProvider;
+};
