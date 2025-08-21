@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers } from '../services/user.service.js';
+import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers, createAdmin } from '../services/user.service.js';
 import { uploadToS3, deleteFromS3 } from '../utils/s3.js';
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -7,6 +7,19 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
             const { email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia } = req.body;
             const user = await register({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia });
     res.status(201).json({ message: 'User registered', user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createAdminUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia } = req.body;
+    const admin = await createAdmin({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia });
+    res.status(201).json({ 
+      message: 'Admin user created successfully', 
+      admin 
+    });
   } catch (err) {
     next(err);
   }

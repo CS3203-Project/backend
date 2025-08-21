@@ -57,6 +57,37 @@ export const register = async ({ email, firstName, lastName, password, imageUrl,
   });
 };
 
+export const createAdmin = async ({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia }: UserRegistrationData) => {
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    const err = new Error('Email already exists. Please use a different email address.') as ErrorWithStatus;
+    err.name = 'BadRequestError'; 
+    err.status = 400; 
+    throw err;
+  }
+  
+  const hashedPassword = await hashPassword(password);
+  const adminUser = await prisma.user.create({
+    data: {
+      email,
+      firstName,
+      lastName,
+      password: hashedPassword,
+      role: 'ADMIN', // Set role to ADMIN
+      imageUrl,
+      location,
+      address,
+      phone,
+      socialmedia,
+      isEmailVerified: true, // Admins are auto-verified
+    },
+  });
+
+  // Return user data without password
+  const { password: _, ...adminUserWithoutPassword } = adminUser;
+  return adminUserWithoutPassword;
+};
+
 export const login = async ({ email, password }: { email: string; password: string }) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('User not found');
