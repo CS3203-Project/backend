@@ -1,5 +1,4 @@
 import { prisma } from '../utils/database.js';
-import { withCache, cache } from '../utils/cache.js';
 
 // Type definitions
 interface ServiceCreateData {
@@ -126,69 +125,60 @@ export const getServices = async (filters: ServiceFilters = {}) => {
       take = 20 // Increased default for better UX
     } = filters;
 
-    // Create cache key based on filters
-    const cacheKey = `services_${JSON.stringify({providerId, categoryId, isActive, skip, take})}`;
+    const whereClause: any = {};
+    
+    if (providerId) whereClause.providerId = providerId;
+    if (categoryId) whereClause.categoryId = categoryId;
+    if (isActive !== undefined) whereClause.isActive = isActive;
 
-    return withCache(
-      cacheKey,
-      async () => {
-        const whereClause: any = {};
-        
-        if (providerId) whereClause.providerId = providerId;
-        if (categoryId) whereClause.categoryId = categoryId;
-        if (isActive !== undefined) whereClause.isActive = isActive;
-
-        const services = await prisma.service.findMany({
-          where: whereClause,
-          skip,
-          take,
+    const services = await prisma.service.findMany({
+      where: whereClause,
+      skip,
+      take,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        currency: true,
+        tags: true,
+        images: true,
+        isActive: true,
+        createdAt: true,
+        provider: {
           select: {
             id: true,
-            title: true,
-            description: true,
-            price: true,
-            currency: true,
-            tags: true,
-            images: true,
-            isActive: true,
-            createdAt: true,
-            provider: {
+            averageRating: true,
+            totalReviews: true,
+            user: {
               select: {
-                id: true,
-                averageRating: true,
-                totalReviews: true,
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                    imageUrl: true
-                  }
-                }
-              }
-            },
-            category: {
-              select: {
-                id: true,
-                name: true,
-                slug: true
-              }
-            },
-            // Get review count and average rating efficiently
-            _count: {
-              select: {
-                reviews: true
+                firstName: true,
+                lastName: true,
+                imageUrl: true
               }
             }
-          },
-          orderBy: {
-            createdAt: 'desc'
           }
-        });
-
-        return services;
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
+        // Get review count and average rating efficiently
+        _count: {
+          select: {
+            reviews: true
+          }
+        }
       },
-      3 * 60 * 1000 // Cache for 3 minutes
-    );
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return services;
   } catch (error) {
     throw new Error(`Failed to fetch services: ${error.message}`);
   }
@@ -201,61 +191,55 @@ export const getServices = async (filters: ServiceFilters = {}) => {
  */
 export const getServiceById = async (serviceId: string) => {
   try {
-    return withCache(
-      `service_${serviceId}`,
-      async () => {
-        const service = await prisma.service.findUnique({
-          where: { id: serviceId },
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        currency: true,
+        tags: true,
+        images: true,
+        isActive: true,
+        workingTime: true,
+        createdAt: true,
+        updatedAt: true,
+        provider: {
           select: {
             id: true,
-            title: true,
-            description: true,
-            price: true,
-            currency: true,
-            tags: true,
-            images: true,
-            isActive: true,
-            workingTime: true,
-            createdAt: true,
-            updatedAt: true,
-            provider: {
+            bio: true,
+            averageRating: true,
+            totalReviews: true,
+            user: {
               select: {
-                id: true,
-                bio: true,
-                averageRating: true,
-                totalReviews: true,
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                    email: true,
-                    phone: true,
-                    imageUrl: true
-                  }
-                }
-              }
-            },
-            category: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                description: true
-              }
-            },
-            _count: {
-              select: {
-                reviews: true,
-                schedules: true
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                imageUrl: true
               }
             }
           }
-        });
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true
+          }
+        },
+        _count: {
+          select: {
+            reviews: true,
+            schedules: true
+          }
+        }
+      }
+    });
 
-        return service;
-      },
-      5 * 60 * 1000 // Cache for 5 minutes
-    );
+    return service;
   } catch (error) {
     throw new Error(`Failed to fetch service: ${error.message}`);
   }

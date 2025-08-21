@@ -11,7 +11,6 @@ try {
 }
 
 import { prisma } from './src/utils/database.js';
-import { withAccelerate } from '@prisma/extension-accelerate';
 import express, { type Application } from 'express';
 import cors from 'cors';
 import compression from 'compression';
@@ -23,10 +22,7 @@ import servicesRoutes from './src/routes/services.route.js';
 import categoryRoutes from './src/routes/category.route.js';
 import adminRoutes from './src/routes/admin.route.js';
 import healthRoutes from './src/routes/health.route.js';
-import { performanceMonitor } from './src/middlewares/performance.middleware.js';
-
-// Extend prisma with Accelerate
-const acceleratedPrisma = prisma.$extends(withAccelerate()); 
+import { performanceMonitor } from './src/middlewares/performance.middleware.js'; 
 
 // Database connectivity test function
 async function testDatabaseConnection() {
@@ -35,7 +31,7 @@ async function testDatabaseConnection() {
     const startTime = Date.now();
     
     // Just test basic connection
-    await acceleratedPrisma.$queryRaw`SELECT 1 as test`;
+    await prisma.$queryRaw`SELECT 1 as test`;
     const connectionTime = Date.now() - startTime;
     console.log(`✅ Database connection successful (${connectionTime}ms)`);
     

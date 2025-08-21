@@ -1,6 +1,5 @@
 
 import { prisma } from '../utils/database.js';
-import { withCache, cache } from '../utils/cache.js';
 import jwt from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash.js';
 
@@ -99,84 +98,77 @@ export const login = async ({ email, password }: { email: string; password: stri
 };
 
 export const getProfile = async (userId: string) => {
-  // Use cache for user profiles
-  return withCache(
-    `user_profile_${userId}`,
-    async () => {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          firstName: true,
-          lastName: true,
-          imageUrl: true,
-          location: true,
-          address: true,
-          phone: true,
-          socialmedia: true,
-          createdAt: true,
-          isEmailVerified: true,
-        },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      firstName: true,
+      lastName: true,
+      imageUrl: true,
+      location: true,
+      address: true,
+      phone: true,
+      socialmedia: true,
+      createdAt: true,
+      isEmailVerified: true,
+    },
+  });
+  
+  if (!user) throw new Error('User not found');
+  
+  // Fetch service provider data separately to avoid heavy joins
+  let serviceProvider = null;
+  if (user.role === 'PROVIDER' || user.role === 'ADMIN') {
+    serviceProvider = await prisma.serviceProvider.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        bio: true,
+        skills: true,
+        qualifications: true,
+        logoUrl: true,
+        averageRating: true,
+        totalReviews: true,
+      },
+    });
+    
+    // Get services count instead of full services for better performance
+    if (serviceProvider) {
+      const servicesCount = await prisma.service.count({
+        where: { providerId: serviceProvider.id, isActive: true }
       });
       
-      if (!user) throw new Error('User not found');
-      
-      // Fetch service provider data separately to avoid heavy joins
-      let serviceProvider = null;
-      if (user.role === 'PROVIDER' || user.role === 'ADMIN') {
-        serviceProvider = await prisma.serviceProvider.findUnique({
-          where: { userId },
-          select: {
-            id: true,
-            bio: true,
-            skills: true,
-            qualifications: true,
-            logoUrl: true,
-            averageRating: true,
-            totalReviews: true,
-          },
-        });
-        
-        // Get services count instead of full services for better performance
-        if (serviceProvider) {
-          const servicesCount = await prisma.service.count({
-            where: { providerId: serviceProvider.id, isActive: true }
-          });
-          
-          // Get latest 5 reviews for quick display
-          const recentReviews = await prisma.review.findMany({
-            where: { revieweeId: serviceProvider.id },
+      // Get latest 5 reviews for quick display
+      const recentReviews = await prisma.review.findMany({
+        where: { revieweeId: serviceProvider.id },
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          reviewer: {
             select: {
-              id: true,
-              rating: true,
-              comment: true,
-              createdAt: true,
-              reviewer: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  imageUrl: true
-                }
-              }
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 5
-          });
-          
-          serviceProvider = {
-            ...serviceProvider,
-            servicesCount,
-            recentReviews
-          };
-        }
-      }
+              firstName: true,
+              lastName: true,
+              imageUrl: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      });
       
-      return { ...user, serviceProvider };
-    },
-    2 * 60 * 1000 // Cache for 2 minutes
-  );
+      serviceProvider = {
+        ...serviceProvider,
+        servicesCount,
+        recentReviews
+      };
+    }
+  }
+  
+  return { ...user, serviceProvider };
 }
 
 export const updateProfile = async (userId: string, data: UserUpdateData) => {
@@ -188,9 +180,6 @@ export const updateProfile = async (userId: string, data: UserUpdateData) => {
   if (data.address) updatedData.address = data.address;
   if (data.phone) updatedData.phone = data.phone;
   if (data.socialmedia) updatedData.socialmedia = data.socialmedia;
-
-  // Clear cache when updating
-  cache.delete(`user_profile_${userId}`);
 
   return await prisma.user.update({
     where: { id: userId },
@@ -205,18 +194,11 @@ export const deleteProfile = async (userId: string) => {
 }
 
 export const checkEmailExists = async (email: string) => {
-  // Cache email existence checks for 1 minute
-  return withCache(
-    `email_exists_${email}`,
-    async () => {
-      const user = await prisma.user.findUnique({ 
-        where: { email },
-        select: { id: true } // Only select id for minimal data transfer
-      });
-      return !!user;
-    },
-    60 * 1000 // 1 minute cache
-  );
+  const user = await prisma.user.findUnique({ 
+    where: { email },
+    select: { id: true } // Only select id for minimal data transfer
+  });
+  return !!user;
 }
 
 export const searchUsers = async (query: string) => {
