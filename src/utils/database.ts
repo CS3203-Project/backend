@@ -43,27 +43,3 @@ class DatabaseManager {
 
 // Export the singleton instance
 export const prisma = DatabaseManager.getInstance();
-
-// Test connection with retry logic
-async function connectWithRetry(maxRetries = 3) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      console.log(`✅ Connected to database on attempt ${attempt}`);
-      return;
-    } catch (error: any) {
-      console.log(`❌ Connection attempt ${attempt} failed:`, error.message);
-      
-      if (attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Wait before retry (exponential backoff)
-      const waitTime = Math.pow(2, attempt) * 1000;
-      console.log(`⏳ Retrying in ${waitTime/1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-  }
-}
-
-export { connectWithRetry };

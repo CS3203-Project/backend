@@ -134,13 +134,13 @@ export const getProfile = async (userId: string) => {
       },
     });
     
-    // Get services count instead of full services for better performance
+    // Get services count
     if (serviceProvider) {
       const servicesCount = await prisma.service.count({
         where: { providerId: serviceProvider.id, isActive: true }
       });
       
-      // Get latest 5 reviews for quick display
+      // Get latest 5 reviews
       const recentReviews = await prisma.review.findMany({
         where: { revieweeId: serviceProvider.id },
         select: {
@@ -217,7 +217,7 @@ export const searchUsers = async (query: string) => {
       lastName: true,
       imageUrl: true,
     },
-    take: 20, // Limit results to prevent performance issues
+    take: 20,
   });
   return users;
 }
