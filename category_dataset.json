@@ -1,141 +1,51 @@
 {
   "categories": [
     {
-      "name": "Home Services",
-      "slug": "home-services",
-      "description": "Professional services for your home maintenance, repairs, and improvements",
-      "parentId": null,
+      "name": "Home & Garden",
+      "slug": "home-garden",
+      "description": "All services related to home improvement, maintenance, and gardening",
       "subcategories": [
-        {
-          "name": "Cleaning Services",
-          "slug": "cleaning-services",
-          "description": "Professional cleaning for homes and offices"
-        },
         {
           "name": "Plumbing",
           "slug": "plumbing",
-          "description": "Plumbing repairs, installations, and maintenance"
+          "description": "Water pipe installation, repair, and maintenance services"
         },
         {
-          "name": "Electrical Work",
-          "slug": "electrical-work",
-          "description": "Electrical installations, repairs, and maintenance"
-        },
-        {
-          "name": "Gardening & Landscaping",
-          "slug": "gardening-landscaping",
-          "description": "Garden maintenance, landscaping, and outdoor services"
-        },
-        {
-          "name": "Home Renovation",
-          "slug": "home-renovation",
-          "description": "Home improvement and renovation services"
-        },
-        {
-          "name": "Painting & Decorating",
-          "slug": "painting-decorating",
-          "description": "Interior and exterior painting services"
+          "name": "Electrical",
+          "slug": "electrical", 
+          "description": "Electrical installation, repair, and safety services"
         },
         {
           "name": "Carpentry",
           "slug": "carpentry",
-          "description": "Custom woodwork and carpentry services"
+          "description": "Wood working, furniture making, and repair services"
         },
         {
-          "name": "Pest Control",
-          "slug": "pest-control",
-          "description": "Professional pest management and control services"
+          "name": "Painting",
+          "slug": "painting",
+          "description": "Interior and exterior painting services"
         },
         {
-          "name": "HVAC Services",
-          "slug": "hvac-services",
-          "description": "Heating, ventilation, and air conditioning services"
+          "name": "Gardening",
+          "slug": "gardening",
+          "description": "Landscape design, maintenance, and plant care"
         },
         {
-          "name": "Security Systems",
-          "slug": "security-systems",
-          "description": "Home security installation and monitoring"
+          "name": "Cleaning",
+          "slug": "cleaning",
+          "description": "House cleaning, deep cleaning, and maintenance services"
         }
       ]
     },
     {
-      "name": "Creative Services",
-      "slug": "creative-services",
-      "description": "Professional creative and design services for businesses and individuals",
-      "parentId": null,
+      "name": "Health & Wellness",
+      "slug": "health-wellness",
+      "description": "Healthcare, fitness, and wellness services",
       "subcategories": [
         {
-          "name": "Graphic Design",
-          "slug": "graphic-design",
-          "description": "Logo design, branding, and visual identity services"
-        },
-        {
-          "name": "Web Design",
-          "slug": "web-design",
-          "description": "Website design and user interface development"
-        },
-        {
-          "name": "Photography",
-          "slug": "photography",
-          "description": "Professional photography for events, portraits, and commercial use"
-        },
-        {
-          "name": "Video Production",
-          "slug": "video-production",
-          "description": "Video editing, production, and cinematography services"
-        },
-        {
-          "name": "Content Writing",
-          "slug": "content-writing",
-          "description": "Professional writing services for web, marketing, and publications"
-        },
-        {
-          "name": "Digital Marketing",
-          "slug": "digital-marketing",
-          "description": "Social media management, SEO, and online marketing"
-        },
-        {
-          "name": "Animation",
-          "slug": "animation",
-          "description": "2D and 3D animation services"
-        },
-        {
-          "name": "Voice Over",
-          "slug": "voice-over",
-          "description": "Professional voice recording and narration services"
-        },
-        {
-          "name": "Music Production",
-          "slug": "music-production",
-          "description": "Audio recording, mixing, and music production"
-        },
-        {
-          "name": "Illustration",
-          "slug": "illustration",
-          "description": "Custom illustrations and artwork"
-        }
-      ]
-    },
-    {
-      "name": "Personal Care",
-      "slug": "personal-care",
-      "description": "Health, wellness, and personal grooming services",
-      "parentId": null,
-      "subcategories": [
-        {
-          "name": "Hair Styling",
-          "slug": "hair-styling",
-          "description": "Professional hair cutting, styling, and treatments"
-        },
-        {
-          "name": "Beauty & Makeup",
-          "slug": "beauty-makeup",
-          "description": "Makeup services for events and special occasions"
-        },
-        {
-          "name": "Spa Services",
-          "slug": "spa-services",
-          "description": "Relaxation and wellness spa treatments"
+          "name": "Personal Training",
+          "slug": "personal-training",
+          "description": "Fitness coaching and personal workout sessions"
         },
         {
           "name": "Massage Therapy",
@@ -143,150 +53,179 @@
           "description": "Therapeutic and relaxation massage services"
         },
         {
-          "name": "Nail Care",
-          "slug": "nail-care",
-          "description": "Manicure, pedicure, and nail art services"
+          "name": "Nutrition Consulting",
+          "slug": "nutrition-consulting",
+          "description": "Diet planning and nutritional guidance"
         },
         {
-          "name": "Personal Training",
-          "slug": "personal-training",
-          "description": "Fitness coaching and personal training sessions"
+          "name": "Mental Health",
+          "slug": "mental-health",
+          "description": "Counseling, therapy, and mental wellness services"
         },
         {
-          "name": "Nutrition Counseling",
-          "slug": "nutrition-counseling",
-          "description": "Dietary advice and nutrition planning"
-        },
-        {
-          "name": "Mental Health Counseling",
-          "slug": "mental-health-counseling",
-          "description": "Professional counseling and therapy services"
-        },
-        {
-          "name": "Yoga & Meditation",
-          "slug": "yoga-meditation",
-          "description": "Yoga classes and meditation guidance"
-        },
-        {
-          "name": "Skincare",
-          "slug": "skincare",
-          "description": "Professional skincare treatments and consultations"
+          "name": "Beauty Services",
+          "slug": "beauty-services",
+          "description": "Hair styling, makeup, and beauty treatments"
         }
       ]
     },
     {
-      "name": "Professional Services",
-      "slug": "professional-services",
-      "description": "Expert professional and consulting services",
-      "parentId": null,
+      "name": "Technology",
+      "slug": "technology",
+      "description": "IT services, computer repair, and tech support",
       "subcategories": [
         {
-          "name": "Legal Services",
-          "slug": "legal-services",
-          "description": "Legal consultation and representation"
+          "name": "Computer Repair",
+          "slug": "computer-repair",
+          "description": "Hardware and software troubleshooting and repair"
         },
         {
-          "name": "Accounting & Bookkeeping",
-          "slug": "accounting-bookkeeping",
-          "description": "Financial management and accounting services"
+          "name": "Web Development",
+          "slug": "web-development",
+          "description": "Website creation, maintenance, and optimization"
         },
         {
-          "name": "Tax Preparation",
-          "slug": "tax-preparation",
-          "description": "Tax filing and preparation services"
+          "name": "Mobile App Development",
+          "slug": "mobile-app-development",
+          "description": "iOS and Android app development services"
         },
         {
-          "name": "Real Estate",
-          "slug": "real-estate",
-          "description": "Property buying, selling, and rental services"
+          "name": "IT Consulting",
+          "slug": "it-consulting",
+          "description": "Technology strategy and implementation consulting"
         },
         {
-          "name": "Insurance Services",
-          "slug": "insurance-services",
-          "description": "Insurance consultation and policy management"
+          "name": "Digital Marketing",
+          "slug": "digital-marketing",
+          "description": "Online marketing, SEO, and social media services"
+        }
+      ]
+    },
+    {
+      "name": "Education & Tutoring",
+      "slug": "education-tutoring",
+      "description": "Learning, tutoring, and educational services",
+      "subcategories": [
+        {
+          "name": "Academic Tutoring",
+          "slug": "academic-tutoring",
+          "description": "Subject-specific tutoring for students"
         },
         {
-          "name": "Financial Planning",
-          "slug": "financial-planning",
-          "description": "Investment advice and financial planning"
+          "name": "Language Learning",
+          "slug": "language-learning",
+          "description": "Foreign language instruction and conversation practice"
         },
         {
-          "name": "Architecture",
-          "slug": "architecture",
-          "description": "Architectural design and planning services"
+          "name": "Music Lessons",
+          "slug": "music-lessons",
+          "description": "Instrument lessons and music theory instruction"
         },
         {
-          "name": "Engineering",
-          "slug": "engineering",
-          "description": "Professional engineering consultation"
+          "name": "Test Preparation",
+          "slug": "test-preparation",
+          "description": "SAT, GRE, GMAT, and other standardized test prep"
         },
         {
-          "name": "Translation Services",
-          "slug": "translation-services",
-          "description": "Document translation and interpretation"
+          "name": "Professional Training",
+          "slug": "professional-training",
+          "description": "Career development and skill enhancement training"
+        }
+      ]
+    },
+    {
+      "name": "Transportation",
+      "slug": "transportation",
+      "description": "Vehicle services, moving, and transportation solutions",
+      "subcategories": [
+        {
+          "name": "Auto Repair",
+          "slug": "auto-repair",
+          "description": "Car maintenance, repair, and diagnostic services"
         },
         {
-          "name": "Notary Services",
-          "slug": "notary-services",
-          "description": "Document notarization and certification"
+          "name": "Moving Services",
+          "slug": "moving-services",
+          "description": "Residential and commercial moving assistance"
+        },
+        {
+          "name": "Delivery Services",
+          "slug": "delivery-services",
+          "description": "Package delivery and courier services"
+        },
+        {
+          "name": "Ride Services",
+          "slug": "ride-services",
+          "description": "Personal transportation and chauffeur services"
+        },
+        {
+          "name": "Vehicle Detailing",
+          "slug": "vehicle-detailing",
+          "description": "Car washing, detailing, and cosmetic services"
+        }
+      ]
+    },
+    {
+      "name": "Events & Entertainment",
+      "slug": "events-entertainment",
+      "description": "Event planning, entertainment, and celebration services",
+      "subcategories": [
+        {
+          "name": "Event Planning",
+          "slug": "event-planning",
+          "description": "Wedding, party, and corporate event organization"
+        },
+        {
+          "name": "Photography",
+          "slug": "photography",
+          "description": "Portrait, event, and commercial photography services"
+        },
+        {
+          "name": "Catering",
+          "slug": "catering",
+          "description": "Food and beverage services for events"
+        },
+        {
+          "name": "Entertainment",
+          "slug": "entertainment",
+          "description": "DJ services, live music, and performance entertainment"
+        },
+        {
+          "name": "Decoration",
+          "slug": "decoration",
+          "description": "Event decoration and styling services"
         }
       ]
     },
     {
       "name": "Business Services",
       "slug": "business-services",
-      "description": "Professional services to help businesses grow and operate efficiently",
-      "parentId": null,
+      "description": "Professional services for businesses and entrepreneurs",
       "subcategories": [
+        {
+          "name": "Accounting",
+          "slug": "accounting",
+          "description": "Bookkeeping, tax preparation, and financial services"
+        },
+        {
+          "name": "Legal Services",
+          "slug": "legal-services",
+          "description": "Legal consultation and document preparation"
+        },
+        {
+          "name": "Marketing",
+          "slug": "marketing",
+          "description": "Brand strategy, advertising, and promotional services"
+        },
         {
           "name": "Business Consulting",
           "slug": "business-consulting",
-          "description": "Strategic business advice and consulting"
-        },
-        {
-          "name": "IT Support",
-          "slug": "it-support",
-          "description": "Computer and network technical support"
-        },
-        {
-          "name": "Software Development",
-          "slug": "software-development",
-          "description": "Custom software and application development"
-        },
-        {
-          "name": "Data Entry",
-          "slug": "data-entry",
-          "description": "Professional data entry and processing services"
+          "description": "Strategy development and business optimization"
         },
         {
           "name": "Virtual Assistant",
           "slug": "virtual-assistant",
-          "description": "Remote administrative and support services"
-        },
-        {
-          "name": "Customer Service",
-          "slug": "customer-service",
-          "description": "Outsourced customer support services"
-        },
-        {
-          "name": "HR Services",
-          "slug": "hr-services",
-          "description": "Human resources consulting and management"
-        },
-        {
-          "name": "Project Management",
-          "slug": "project-management",
-          "description": "Professional project planning and execution"
-        },
-        {
-          "name": "Market Research",
-          "slug": "market-research",
-          "description": "Market analysis and research services"
-        },
-        {
-          "name": "Business Writing",
-          "slug": "business-writing",
-          "description": "Professional business documents and proposals"
+          "description": "Administrative and organizational support services"
         }
       ]
     }
