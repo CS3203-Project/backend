@@ -4,7 +4,8 @@ import {
   getServices,
   getServiceById,
   updateService,
-  deleteService
+  deleteService,
+  uploadServiceImages
 } from '../controllers/services.controller.js';
 import validate from '../middlewares/validation.middleware.js';
 import {
@@ -14,6 +15,7 @@ import {
   serviceIdSchema
 } from '../validators/services.validator.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
+import { upload, handleUploadError } from '../utils/s3.js';
 
 const router = Router();
 
@@ -58,5 +60,17 @@ router.put('/:id',
  * @access  Private (Service Provider - own services only)
  */
 router.delete('/:id', validate(serviceIdSchema, 'params'), deleteService);
+
+/**
+ * @route   POST /api/services/:id/upload-images
+ * @desc    Upload images for a service
+ * @access  Private (Service Provider - own services only)
+ */
+router.post('/:id/upload-images', 
+  authMiddleware,
+  validate(serviceIdSchema, 'params'),
+  handleUploadError(upload.array('images', 5)), // Allow up to 5 images
+  uploadServiceImages
+);
 
 export default router;
