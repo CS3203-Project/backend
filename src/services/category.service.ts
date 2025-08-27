@@ -176,6 +176,23 @@ export const getAllCategories = async (filters: CategoryFilters = {}) => {
       }
     });
 
+    // If includeServices is true and we're getting categories with parentId null (root categories),
+    // calculate total services count including subcategories
+    if (includeServices && parentId === null) {
+      const categoriesWithTotalCount = await Promise.all(
+        categories.map(async (category) => {
+          const totalServicesCount = await getTotalServicesInCategory(category.id);
+          return {
+            ...category,
+            _count: {
+              services: totalServicesCount
+            }
+          };
+        })
+      );
+      return categoriesWithTotalCount;
+    }
+
     return categories;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -234,6 +251,21 @@ export const getCategoryById = async (id: string, options: CategoryOptions = {})
       }
     });
 
+    if (!category) {
+      return null;
+    }
+
+    // If this is a root category, calculate total services including subcategories
+    if (includeServices && !category.parentId) {
+      const totalServicesCount = await getTotalServicesInCategory(category.id);
+      return {
+        ...category,
+        _count: {
+          services: totalServicesCount
+        }
+      };
+    }
+
     return category;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -291,6 +323,21 @@ export const getCategoryBySlug = async (slug: string, options: CategoryOptions =
         }
       }
     });
+
+    if (!category) {
+      return null;
+    }
+
+    // If this is a root category, calculate total services including subcategories
+    if (includeServices && !category.parentId) {
+      const totalServicesCount = await getTotalServicesInCategory(category.id);
+      return {
+        ...category,
+        _count: {
+          services: totalServicesCount
+        }
+      };
+    }
 
     return category;
   } catch (error) {
@@ -464,15 +511,111 @@ export const getRootCategories = async (options: RootCategoryOptions = {}) => {
   try {
     const { includeChildren = true } = options;
 
-    return await getAllCategories({
-      parentId: null,
-      includeChildren,
-      includeParent: false,
-      includeServices: true
+    const rootCategories = await prisma.category.findMany({
+      where: { parentId: null },
+      include: {
+        children: includeChildren ? {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true
+          }
+        } : false,
+        _count: {
+          select: {
+            services: true
+          }
+        }
+      },
+      orderBy: {
+        name: 'asc'
+      }
     });
+
+    // Calculate total services count including subcategories using a simpler approach
+    const categoriesWithTotalCount = await Promise.all(
+      rootCategories.map(async (category) => {
+        try {
+          // Use a direct SQL query approach to count all services in category hierarchy
+          const result = await prisma.$queryRaw<Array<{ count: number }>>`
+            WITH RECURSIVE category_tree AS (
+              SELECT id FROM "Category" WHERE id = ${category.id}
+              UNION ALL
+              SELECT c.id FROM "Category" c
+              INNER JOIN category_tree ct ON c."parentId" = ct.id
+            )
+            SELECT COUNT(*)::int as count FROM "Service" s
+            WHERE s."categoryId" IN (SELECT id FROM category_tree)
+            AND s."isActive" = true
+          `;
+          
+          const totalCount = result[0]?.count || 0;
+          
+          return {
+            ...category,
+            _count: {
+              services: totalCount
+            }
+          };
+        } catch (error) {
+          console.error(`Error counting services for category ${category.id}:`, error);
+          return {
+            ...category,
+            _count: {
+              services: category._count.services
+            }
+          };
+        }
+      })
+    );
+
+    return categoriesWithTotalCount;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     throw new CategoryError(`Failed to fetch root categories: ${errorMessage}`);
+  }
+};
+
+/**
+ * Recursively count services in a category and all its subcategories
+ * @param categoryId - Category ID
+ * @param maxDepth - Maximum recursion depth to prevent infinite loops
+ * @param currentDepth - Current recursion depth
+ * @returns Total count of services
+ */
+const getTotalServicesInCategory = async (categoryId: string, maxDepth: number = 10, currentDepth: number = 0): Promise<number> => {
+  try {
+    // Prevent infinite recursion
+    if (currentDepth >= maxDepth) {
+      console.warn(`Maximum recursion depth reached for category ${categoryId}`);
+      return 0;
+    }
+
+    // Get direct services count (only active services)
+    const directServicesCount = await prisma.service.count({
+      where: { 
+        categoryId,
+        isActive: true
+      }
+    });
+
+    // Get subcategories
+    const subcategories = await prisma.category.findMany({
+      where: { parentId: categoryId },
+      select: { id: true }
+    });
+
+    // Recursively count services in subcategories
+    let subcategoryServicesCount = 0;
+    for (const subcategory of subcategories) {
+      subcategoryServicesCount += await getTotalServicesInCategory(subcategory.id, maxDepth, currentDepth + 1);
+    }
+
+    return directServicesCount + subcategoryServicesCount;
+  } catch (error) {
+    console.error(`Error counting services for category ${categoryId}:`, error);
+    return 0;
   }
 };
 

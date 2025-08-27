@@ -4,16 +4,16 @@ export const createProviderSchema = Joi.object({
   bio: Joi.string().max(1000).optional(),
   skills: Joi.array().items(Joi.string()).optional(),
   qualifications: Joi.array().items(Joi.string()).optional(),
-  logoUrl: Joi.string().uri().optional(),
-  IDCardUrl: Joi.string().uri().required() // Required ID card image URL
+  logoUrl: Joi.string().optional(), // Allow any string format, not strict URI
+  IDCardUrl: Joi.string().optional() // Optional during creation, allow spaces in URLs
 });
 
 export const updateProviderSchema = Joi.object({
   bio: Joi.string().max(1000).optional(),
   skills: Joi.array().items(Joi.string()).optional(),
   qualifications: Joi.array().items(Joi.string()).optional(),
-  logoUrl: Joi.string().uri().optional(),
-  IDCardUrl: Joi.string().uri().optional() // Optional for updates
+  logoUrl: Joi.string().optional(), // Allow any string format, not strict URI
+  IDCardUrl: Joi.string().optional() // Optional for updates, allow spaces in URLs
 });
 
 export const providerParamsSchema = Joi.object({
