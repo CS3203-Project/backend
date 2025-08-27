@@ -13,7 +13,6 @@ try {
 import { prisma } from './src/utils/database.js';
 import express, { type Application } from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import userRoutes from './src/routes/user.route.js';
 import providerRoutes from './src/routes/provider.route.js';
 import companyRoutes from './src/routes/company.route.js';
@@ -34,18 +33,6 @@ async function testDatabaseConnection() {
 } 
 
 const app: Application = express();
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Apply rate limiting to all routes
-app.use(limiter);
 
 // CORS configuration
 app.use(cors({
