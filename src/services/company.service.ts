@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/database.js';
 
-const prisma = new PrismaClient();
-
-// Type definitions
+// Types
 interface CompanyCreateData {
   name: string;
   description?: string;

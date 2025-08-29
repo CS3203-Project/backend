@@ -51,3 +51,27 @@ export const getProviderById = async (req: Request, res: Response, next: NextFun
     next(err);
   }
 };
+
+export const verifyProvider = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const provider = await providerService.verifyProvider(req.params.id);
+    res.status(200).json({ 
+      message: 'Service provider verified successfully', 
+      provider 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const unverifyProvider = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const provider = await providerService.unverifyProvider(req.params.id);
+    res.status(200).json({ 
+      message: 'Service provider unverified successfully', 
+      provider 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
