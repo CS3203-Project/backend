@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers } from '../services/user.service.js';
+import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers, getUserById } from '../services/user.service.js';
 import { uploadToS3, deleteFromS3 } from '../utils/s3.js';
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -118,6 +118,19 @@ export const uploadImageController = async (req: Request, res: Response, next: N
       message: 'Image uploaded successfully',
       imageUrl 
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getUserByIdController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+    const user = await getUserById(userId);
+    res.status(200).json(user);
   } catch (err) {
     next(err);
   }
