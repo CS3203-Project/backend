@@ -1,9 +1,7 @@
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/database.js';
 import jwt from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash.js';
-
-const prisma = new PrismaClient();
 
 // Type definitions
 interface UserRegistrationData {
@@ -57,6 +55,37 @@ export const register = async ({ email, firstName, lastName, password, imageUrl,
   });
 };
 
+export const createAdmin = async ({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia }: UserRegistrationData) => {
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    const err = new Error('Email already exists. Please use a different email address.') as ErrorWithStatus;
+    err.name = 'BadRequestError'; 
+    err.status = 400; 
+    throw err;
+  }
+  
+  const hashedPassword = await hashPassword(password);
+  const adminUser = await prisma.user.create({
+    data: {
+      email,
+      firstName,
+      lastName,
+      password: hashedPassword,
+      role: 'ADMIN', // Set role to ADMIN
+      imageUrl,
+      location,
+      address,
+      phone,
+      socialmedia,
+      isEmailVerified: true, // Admins are auto-verified
+    },
+  });
+
+  // Return user data without password
+  const { password: _, ...adminUserWithoutPassword } = adminUser;
+  return adminUserWithoutPassword;
+};
+
 export const login = async ({ email, password }: { email: string; password: string }) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('User not found');
@@ -84,51 +113,62 @@ export const getProfile = async (userId: string) => {
       socialmedia: true,
       createdAt: true,
       isEmailVerified: true,
-      serviceProvider: {
-        select: {
-          id: true,
-          bio: true,
-          skills: true,
-          qualifications: true,
-          logoUrl: true,
-          averageRating: true,
-          totalReviews: true,
-          services: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              price: true,
-              currency: true,
-              images: true,
-              isActive: true
-            }
-          },
-          reviews: {
-            select: {
-              id: true,
-              rating: true,
-              comment: true,
-              createdAt: true,
-              reviewer: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  imageUrl: true
-                }
-              }
-            },
-            orderBy: {
-              createdAt: 'desc'
-            },
-            take: 10
-          }
-        }
-      }
     },
   });
+  
   if (!user) throw new Error('User not found');
-  return user;
+  
+  // Fetch service provider data separately to avoid heavy joins
+  let serviceProvider = null;
+  if (user.role === 'PROVIDER' || user.role === 'ADMIN') {
+    serviceProvider = await prisma.serviceProvider.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        bio: true,
+        skills: true,
+        qualifications: true,
+        logoUrl: true,
+        averageRating: true,
+        totalReviews: true,
+      },
+    });
+    
+    // Get services count
+    if (serviceProvider) {
+      const servicesCount = await prisma.service.count({
+        where: { providerId: serviceProvider.id, isActive: true }
+      });
+      
+      // Get latest 5 reviews
+      const recentReviews = await prisma.review.findMany({
+        where: { revieweeId: serviceProvider.id },
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          reviewer: {
+            select: {
+              firstName: true,
+              lastName: true,
+              imageUrl: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      });
+      
+      serviceProvider = {
+        ...serviceProvider,
+        servicesCount,
+        recentReviews
+      };
+    }
+  }
+  
+  return { ...user, serviceProvider };
 }
 
 export const updateProfile = async (userId: string, data: UserUpdateData) => {
@@ -154,7 +194,10 @@ export const deleteProfile = async (userId: string) => {
 }
 
 export const checkEmailExists = async (email: string) => {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ 
+    where: { email },
+    select: { id: true } // Only select id for minimal data transfer
+  });
   return !!user;
 }
 
@@ -174,7 +217,7 @@ export const searchUsers = async (query: string) => {
       lastName: true,
       imageUrl: true,
     },
-    take: 20, // Limit results to prevent performance issues
+    take: 20,
   });
   return users;
 }

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/database.js';
 
 // Type definitions
 interface ServiceCreateData {
@@ -122,9 +120,9 @@ export const getServices = async (filters: ServiceFilters = {}) => {
     const {
       providerId,
       categoryId,
-      isActive,
+      isActive = true, // Default to active services only
       skip = 0,
-      take = 10
+      take = 20 // Increased default for better UX
     } = filters;
 
     const whereClause: any = {};
@@ -137,27 +135,41 @@ export const getServices = async (filters: ServiceFilters = {}) => {
       where: whereClause,
       skip,
       take,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        currency: true,
+        tags: true,
+        images: true,
+        isActive: true,
+        createdAt: true,
         provider: {
-          include: {
+          select: {
+            id: true,
+            averageRating: true,
+            totalReviews: true,
             user: {
               select: {
                 firstName: true,
                 lastName: true,
-                email: true
+                imageUrl: true
               }
             }
           }
         },
-        category: true,
-        reviews: {
-          include: {
-            reviewer: {
-              select: {
-                firstName: true,
-                lastName: true
-              }
-            }
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
+        // Get review count and average rating efficiently
+        _count: {
+          select: {
+            reviews: true
           }
         }
       },
@@ -181,31 +193,49 @@ export const getServiceById = async (serviceId: string) => {
   try {
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        currency: true,
+        tags: true,
+        images: true,
+        isActive: true,
+        workingTime: true,
+        createdAt: true,
+        updatedAt: true,
         provider: {
-          include: {
+          select: {
+            id: true,
+            bio: true,
+            averageRating: true,
+            totalReviews: true,
             user: {
               select: {
                 firstName: true,
                 lastName: true,
                 email: true,
-                phone: true
+                phone: true,
+                imageUrl: true
               }
             }
           }
         },
-        category: true,
-        reviews: {
-          include: {
-            reviewer: {
-              select: {
-                firstName: true,
-                lastName: true
-              }
-            }
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true
           }
         },
-        schedules: true
+        _count: {
+          select: {
+            reviews: true,
+            schedules: true
+          }
+        }
       }
     });
 
