@@ -178,3 +178,34 @@ export const searchUsers = async (query: string) => {
   });
   return users;
 }
+
+export const getUserById = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      isActive: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      imageUrl: true,
+      location: true,
+      address: true,
+      isEmailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+      lastLoginAt: true,
+      socialmedia: true,
+    },
+  });
+  
+  if (!user) {
+    const err = new Error('User not found') as ErrorWithStatus;
+    err.status = 404;
+    throw err;
+  }
+  
+  return user;
+}
