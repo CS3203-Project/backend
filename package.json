@@ -24,8 +24,13 @@
   "homepage": "https://github.com/CS3203-Project/backend#readme",
   "description": "",
   "dependencies": {
+<<<<<<< Updated upstream
     "@aws-sdk/client-s3": "^3.873.0",
     "@aws-sdk/s3-request-presigner": "^3.873.0",
+=======
+    "@aws-sdk/client-s3": "^3.872.0",
+    "@aws-sdk/client-ses": "^3.872.0",
+>>>>>>> Stashed changes
     "@prisma/client": "^6.12.0",
     "@types/aws-sdk": "^2.7.4",
     "@types/multer": "^2.0.0",
