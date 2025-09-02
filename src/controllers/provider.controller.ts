@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as providerService from '../services/provider.service.js';
+import { uploadToS3 } from '../utils/s3.js';
 
 export const createProvider = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -70,6 +71,36 @@ export const unverifyProvider = async (req: Request, res: Response, next: NextFu
     res.status(200).json({ 
       message: 'Service provider unverified successfully', 
       provider 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const uploadIdCard = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!(req as any).file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No ID card image provided'
+      });
+    }
+
+    // Upload ID card to S3
+    const idCardUrl = await uploadToS3((req as any).file, 'id-cards');
+    
+    // Update provider with ID card URL
+    const provider = await providerService.updateProvider((req as any).user.id, {
+      IDCardUrl: idCardUrl
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: 'ID card uploaded successfully',
+      data: {
+        provider,
+        idCardUrl
+      }
     });
   } catch (err) {
     next(err);

@@ -45,7 +45,7 @@ export const createProvider = async (userId: string, providerData: ProviderCreat
         skills: providerData.skills || [],
         qualifications: providerData.qualifications || [],
         logoUrl: providerData.logoUrl,
-        IDCardUrl: providerData.IDCardUrl,
+        IDCardUrl: providerData.IDCardUrl || '', // Provide empty string if not provided
       },
       include: {
         user: {

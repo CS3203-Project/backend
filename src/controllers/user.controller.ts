@@ -62,6 +62,15 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
     
     // If a new image file is uploaded, upload it to S3
     if ((req as any).file) {
+      // Check file size (additional validation)
+      if ((req as any).file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({
+          success: false,
+          message: 'File size too large. Maximum allowed size is 5MB',
+          error: 'FILE_SIZE_EXCEEDED'
+        });
+      }
+
       // Get current user to check if they have an existing image
       const currentUser = await getProfile((req as any).user.id);
       
@@ -90,7 +99,11 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
     }
     
     const updatedUser = await updateProfile((req as any).user.id, updateData);
-    res.status(200).json({ message: 'Profile updated', user: updatedUser });
+    res.status(200).json({ 
+      success: true,
+      message: 'Profile updated successfully', 
+      data: updatedUser 
+    });
   } catch (err) {
     next(err);
   }
@@ -121,15 +134,30 @@ export const searchUsersController = async (req: Request, res: Response, next: N
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!(req as any).file) {
-      return res.status(400).json({ message: 'No image file provided' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'No image file provided' 
+      });
+    }
+
+    // Additional file size check
+    if ((req as any).file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({
+        success: false,
+        message: 'File size too large. Maximum allowed size is 5MB',
+        error: 'FILE_SIZE_EXCEEDED'
+      });
     }
 
     // Upload image to S3
     const imageUrl = await uploadToS3((req as any).file, 'uploads');
     
     res.status(200).json({ 
+      success: true,
       message: 'Image uploaded successfully',
-      imageUrl 
+      data: {
+        imageUrl
+      }
     });
   } catch (err) {
     next(err);
