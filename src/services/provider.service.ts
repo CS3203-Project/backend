@@ -138,7 +138,7 @@ export const deleteProvider = async (userId: string) => {
     where: { userId },
     include: {
       services: true,
-      schedules: true,
+      schedules: { select: { customerConfirmation: true, providerConfirmation: true } },
       payments: true,
       reviews: true
     }
@@ -154,7 +154,9 @@ export const deleteProvider = async (userId: string) => {
     throw new Error('Cannot delete provider with active services. Please deactivate all services first.');
   }
 
-  const pendingSchedules = existingProvider.schedules.filter(schedule => !schedule.confirm);
+  const pendingSchedules = existingProvider.schedules.filter(schedule => 
+    !schedule.customerConfirmation || !schedule.providerConfirmation
+  );
   if (pendingSchedules.length > 0) {
     throw new Error('Cannot delete provider with pending schedules.');
   }

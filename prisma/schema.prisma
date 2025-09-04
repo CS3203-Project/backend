@@ -116,17 +116,18 @@ model Service {
 }
 
 model Schedule {
-  id         String          @id @default(cuid())
-  serviceId  String
-  providerId String
-  userId     String
-  startTime  String
-  endTime    String
-  confirm    Boolean         @default(false)
-  queueValue Int?
-  provider   ServiceProvider @relation(fields: [providerId], references: [id])
-  service    Service         @relation(fields: [serviceId], references: [id])
-  user       User            @relation(fields: [userId], references: [id])
+  id                   String          @id @default(cuid())
+  serviceId            String
+  providerId           String
+  userId               String
+  startTime            String
+  endTime              String
+  customerConfirmation Boolean         @default(false)
+  providerConfirmation Boolean         @default(false)
+  queueValue           Int?
+  provider             ServiceProvider @relation(fields: [providerId], references: [id])
+  service              Service         @relation(fields: [serviceId], references: [id])
+  user                 User            @relation(fields: [userId], references: [id])
 }
 
 model Payment {
