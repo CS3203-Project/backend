@@ -9,6 +9,20 @@ const prisma = new PrismaClient();
 async function seed() {
   console.log("Starting seed process...");
 
+  // Create default category first (needed for confirmation system)
+  const defaultCategory = await prisma.category.upsert({
+    where: { slug: 'default' },
+    update: {},
+    create: {
+      id: 'default',
+      name: 'General Services',
+      slug: 'default',
+      description: 'General consultation and services',
+      parentId: null,
+    },
+  });
+  console.log(`Created default category: ${defaultCategory.name}`);
+
   // Read category data from JSON file
   const categoryDataPath = path.join(process.cwd(), "category_dataset.json");
   const categoryData = JSON.parse(fs.readFileSync(categoryDataPath, "utf8"));

@@ -95,7 +95,7 @@ model Service {
   title       String?
   description String?
   price       Decimal         @db.Decimal(10, 2)
-  currency    String          @default("USD")
+  currency    String          @default("RS")
   tags        String[]
   images      String[]
   isActive    Boolean         @default(true)
@@ -124,6 +124,8 @@ model Schedule {
   endTime              String
   customerConfirmation Boolean         @default(false)
   providerConfirmation Boolean         @default(false)
+  serviceFee           Decimal?        @db.Decimal(10, 2)
+  currency             String          @default("RS")
   queueValue           Int?
   provider             ServiceProvider @relation(fields: [providerId], references: [id])
   service              Service         @relation(fields: [serviceId], references: [id])
