@@ -119,3 +119,13 @@ export const serviceIdSchema = Joi.object({
     'any.required': 'Service ID is required'
   })
 });
+
+/**
+ * Validation schema for conversation ID parameter
+ */
+export const conversationIdSchema = Joi.object({
+  conversationId: Joi.string().required().messages({
+    'string.empty': 'Conversation ID is required',
+    'any.required': 'Conversation ID is required'
+  })
+});

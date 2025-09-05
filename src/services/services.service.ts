@@ -311,3 +311,72 @@ export const deleteService = async (serviceId: string) => {
   }
 };
 
+/**
+ * Get a service by conversation ID
+ * @param {string} conversationId - The conversation ID
+ * @returns {Promise<Object|null>} Service object or null if not found
+ */
+export const getServiceByConversationId = async (conversationId: string) => {
+  try {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        service: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            price: true,
+            currency: true,
+            tags: true,
+            images: true,
+            isActive: true,
+            workingTime: true,
+            createdAt: true,
+            updatedAt: true,
+            provider: {
+              select: {
+                id: true,
+                bio: true,
+                averageRating: true,
+                totalReviews: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    phone: true,
+                    imageUrl: true
+                  }
+                }
+              }
+            },
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                description: true
+              }
+            },
+            _count: {
+              select: {
+                serviceReviews: true,
+                schedules: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!conversation || !conversation.service) {
+      return null;
+    }
+
+    return conversation.service;
+  } catch (error) {
+    throw new Error(`Failed to fetch service by conversation ID: ${error.message}`);
+  }
+};
+

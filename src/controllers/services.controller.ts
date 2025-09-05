@@ -112,3 +112,28 @@ export const deleteService = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 };
+
+/**
+ * Get a service by conversation ID
+ */
+export const getServiceByConversationId = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { conversationId } = req.params;
+    const service = await serviceService.getServiceByConversationId(conversationId!);
+    
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found for this conversation'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Service retrieved successfully',
+      data: service
+    });
+  } catch (error) {
+    next(error);
+  }
+};

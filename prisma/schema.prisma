@@ -104,6 +104,7 @@ model Service {
   updatedAt   DateTime        @updatedAt
   payments    Payment[]
   schedules   Schedule[]
+  conversations Conversation[]
   category    Category        @relation(fields: [categoryId], references: [id])
   provider    ServiceProvider @relation(fields: [providerId], references: [id])
   serviceReviews ServiceReview[]
@@ -176,10 +177,12 @@ model EmailQueue {
 }
 
 model Conversation {
-  id       String    @id @default(uuid())
-  userIds  String[]
-  title    String?
-  messages Message[]
+  id         String    @id @default(uuid())
+  userIds    String[]
+  title      String?
+  serviceId  String?
+  service    Service?   @relation(fields: [serviceId], references: [id])
+  messages   Message[]
 }
 
 model Message {

@@ -21,6 +21,7 @@ import categoryRoutes from './src/routes/category.route.js';
 import adminRoutes from './src/routes/admin.route.js'; 
 import confirmationRoutes from './src/routes/confirmation.route.js'; 
 import reviewRoutes from './src/routes/review.route.js';
+import serviceReviewRoutes from './src/routes/serviceReview.route.js';
 
 // Simple database test function
 async function testDatabaseConnection() {
@@ -70,6 +71,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/confirmations', confirmationRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/service-reviews', serviceReviewRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
