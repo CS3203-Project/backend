@@ -78,3 +78,94 @@ export const deleteServiceReview = async (reviewId: string, userId: string) => {
   await prisma.serviceReview.delete({ where: { id: reviewId } });
   return { message: 'Service review deleted successfully' };
 };
+
+export const getServiceReviewStats = async (serviceId: string) => {
+  const reviews = await prisma.serviceReview.findMany({
+    where: { serviceId },
+    select: { rating: true }
+  });
+
+  if (reviews.length === 0) {
+    return {
+      averageRating: 0,
+      totalReviews: 0,
+      ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    };
+  }
+
+  const totalReviews = reviews.length;
+  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+  
+  const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  reviews.forEach(review => {
+    ratingDistribution[review.rating as keyof typeof ratingDistribution]++;
+  });
+
+  return {
+    averageRating: Number(averageRating.toFixed(1)),
+    totalReviews,
+    ratingDistribution
+  };
+};
+
+export const getServiceReviewsDetailed = async (serviceId: string, page = 1, limit = 10, ratingFilter?: number) => {
+  const skip = (page - 1) * limit;
+  
+  const whereClause: any = { serviceId };
+  if (ratingFilter && ratingFilter >= 1 && ratingFilter <= 5) {
+    whereClause.rating = ratingFilter;
+  }
+
+  const [reviews, total, stats] = await Promise.all([
+    prisma.serviceReview.findMany({
+      where: whereClause,
+      include: {
+        reviewer: { 
+          select: { 
+            id: true, 
+            firstName: true, 
+            lastName: true, 
+            imageUrl: true 
+          } 
+        },
+        service: { 
+          select: { 
+            id: true, 
+            title: true 
+          } 
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip, 
+      take: limit
+    }),
+    prisma.serviceReview.count({ where: whereClause }),
+    getServiceReviewStats(serviceId)
+  ]);
+
+  // Transform reviews to match frontend format
+  const transformedReviews = reviews.map(review => ({
+    id: review.id,
+    rating: review.rating,
+    comment: review.comment || '',
+    clientName: `${review.reviewer.firstName || ''} ${review.reviewer.lastName || ''}`.trim() || 'Anonymous',
+    clientAvatar: review.reviewer.imageUrl || `https://picsum.photos/seed/${review.reviewer.id}/60/60`,
+    date: review.createdAt.toISOString().split('T')[0], // Format: YYYY-MM-DD
+    helpful: 0, // We don't have helpful votes yet, default to 0
+    service: review.service.title,
+    reviewerId: review.reviewer.id,
+    createdAt: review.createdAt.toISOString(),
+    updatedAt: review.updatedAt.toISOString()
+  }));
+
+  return {
+    reviews: transformedReviews,
+    pagination: { 
+      page, 
+      limit, 
+      total, 
+      totalPages: Math.ceil(total / limit) 
+    },
+    stats
+  };
+};

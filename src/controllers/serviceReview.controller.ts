@@ -4,6 +4,8 @@ import {
   getServiceReviewById,
   updateServiceReview,
   deleteServiceReview,
+  getServiceReviewStats,
+  getServiceReviewsDetailed,
   CreateServiceReviewData,
   UpdateServiceReviewData
 } from '../services/serviceReview.service.js';
@@ -62,5 +64,48 @@ export const deleteServiceReviewController = async (req: Request, res: Response)
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+export const getServiceReviewStatsController = async (req: Request, res: Response) => {
+  try {
+    const { serviceId } = req.params;
+    const stats = await getServiceReviewStats(serviceId);
+    res.json({
+      success: true,
+      message: 'Service review statistics retrieved successfully',
+      data: stats
+    });
+  } catch (err: any) {
+    res.status(400).json({ 
+      success: false,
+      error: err.message 
+    });
+  }
+};
+
+export const getServiceReviewsDetailedController = async (req: Request, res: Response) => {
+  try {
+    const { serviceId } = req.params;
+    const { page = 1, limit = 10, rating } = req.query;
+    
+    const ratingFilter = rating ? Number(rating) : undefined;
+    const result = await getServiceReviewsDetailed(
+      serviceId, 
+      Number(page), 
+      Number(limit), 
+      ratingFilter
+    );
+    
+    res.json({
+      success: true,
+      message: 'Service reviews retrieved successfully',
+      data: result
+    });
+  } catch (err: any) {
+    res.status(400).json({ 
+      success: false,
+      error: err.message 
+    });
   }
 };
