@@ -6,7 +6,9 @@ import {
   updateServiceReviewController,
   deleteServiceReviewController,
   getServiceReviewStatsController,
-  getServiceReviewsDetailedController
+  getServiceReviewsDetailedController,
+  getProviderServiceReviewsController,
+  getProviderReviewStatsController
 } from '../controllers/serviceReview.controller.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
@@ -21,6 +23,12 @@ router.get('/service/:serviceId/detailed', getServiceReviewsDetailedController);
 
 // Get all reviews for a service (basic)
 router.get('/service/:serviceId', getServiceReviewsController);
+
+// Get all reviews for all services of a provider
+router.get('/provider/:providerId', getProviderServiceReviewsController);
+
+// Get review statistics for all services of a provider
+router.get('/provider/:providerId/stats', getProviderReviewStatsController);
 
 // Protected routes (authentication required)
 router.use(authMiddleware);
