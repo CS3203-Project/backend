@@ -4,13 +4,6 @@ import { prisma } from '../utils/database.js';
 // Confirmation data now maps to Schedule table fields
 // conversationId will be used to find related schedules via conversation user IDs
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-  };
-}
-
 interface ConversationConfirmation {
   id?: string;
   conversationId: string;
@@ -141,7 +134,7 @@ function scheduleToConfirmation(schedule: any, conversationId: string): Conversa
 // Remove the in-memory store as we're now using the database
 // const confirmationStore = new Map<string, ConversationConfirmation>();
 
-export const getConfirmationController = async (req: AuthenticatedRequest, res: Response) => {
+export const getConfirmationController = async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
     
@@ -167,7 +160,7 @@ export const getConfirmationController = async (req: AuthenticatedRequest, res: 
   }
 };
 
-export const createConfirmationController = async (req: AuthenticatedRequest, res: Response) => {
+export const createConfirmationController = async (req: Request, res: Response) => {
   try {
     const { conversationId, customerConfirmation = false, providerConfirmation = false, startDate = null, endDate = null, serviceFee = null, currency = 'USD' } = req.body;
     
@@ -226,7 +219,7 @@ export const createConfirmationController = async (req: AuthenticatedRequest, re
   }
 };
 
-export const upsertConfirmationController = async (req: AuthenticatedRequest, res: Response) => {
+export const upsertConfirmationController = async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
     const updates = req.body;

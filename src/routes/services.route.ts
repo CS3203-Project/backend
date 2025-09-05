@@ -4,14 +4,16 @@ import {
   getServices,
   getServiceById,
   updateService,
-  deleteService
+  deleteService,
+  getServiceByConversationId
 } from '../controllers/services.controller.js';
 import validate from '../middlewares/validation.middleware.js';
 import {
   createServiceSchema,
   updateServiceSchema,
   getServicesQuerySchema,
-  serviceIdSchema
+  serviceIdSchema,
+  conversationIdSchema
 } from '../validators/services.validator.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
@@ -40,6 +42,13 @@ router.get('/', validate(getServicesQuerySchema, 'query'), getServices);
  * @access  Public
  */
 router.get('/:id', validate(serviceIdSchema, 'params'), getServiceById);
+
+/**
+ * @route   GET /api/services/conversation/:conversationId
+ * @desc    Get a service by conversation ID
+ * @access  Public
+ */
+router.get('/conversation/:conversationId', validate(conversationIdSchema, 'params'), getServiceByConversationId);
 
 /**
  * @route   PUT /api/services/:id
