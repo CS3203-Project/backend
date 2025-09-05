@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/database.js';
 
 export interface CreateReviewData {
   reviewerId: string;
@@ -29,7 +27,7 @@ export interface CustomerStats {
 export const createReview = async (data: CreateReviewData) => {
   try {
     // Check if review already exists
-    const existingReview = await prisma.review.findFirst({
+    const existingReview = await prisma.customerReview.findFirst({
       where: {
         reviewerId: data.reviewerId,
         revieweeId: data.revieweeId,
@@ -41,7 +39,7 @@ export const createReview = async (data: CreateReviewData) => {
     }
 
     // Create the review
-    const review = await prisma.review.create({
+    const review = await prisma.customerReview.create({
       data: {
         reviewerId: data.reviewerId,
         revieweeId: data.revieweeId,
@@ -60,14 +58,9 @@ export const createReview = async (data: CreateReviewData) => {
         reviewee: {
           select: {
             id: true,
-            userId: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                imageUrl: true,
-              },
-            },
+            firstName: true,
+            lastName: true,
+            imageUrl: true,
           },
         },
       },
@@ -88,7 +81,7 @@ export const getCustomerReviews = async (customerId: string, page: number = 1, l
     const skip = (page - 1) * limit;
 
     const [reviews, total] = await Promise.all([
-      prisma.review.findMany({
+      prisma.customerReview.findMany({
         where: {
           reviewerId: customerId,
         },
@@ -104,14 +97,9 @@ export const getCustomerReviews = async (customerId: string, page: number = 1, l
           reviewee: {
             select: {
               id: true,
-              userId: true,
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  imageUrl: true,
-                },
-              },
+              firstName: true,
+              lastName: true,
+              imageUrl: true,
             },
           },
         },
@@ -121,7 +109,7 @@ export const getCustomerReviews = async (customerId: string, page: number = 1, l
         skip,
         take: limit,
       }),
-      prisma.review.count({
+      prisma.customerReview.count({
         where: {
           reviewerId: customerId,
         },
@@ -148,7 +136,7 @@ export const getReviewsByProvider = async (providerId: string, page: number = 1,
     const skip = (page - 1) * limit;
 
     const [reviews, total] = await Promise.all([
-      prisma.review.findMany({
+      prisma.customerReview.findMany({
         where: {
           revieweeId: providerId,
         },
@@ -164,14 +152,9 @@ export const getReviewsByProvider = async (providerId: string, page: number = 1,
           reviewee: {
             select: {
               id: true,
-              userId: true,
-              user: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                  imageUrl: true,
-                },
-              },
+              firstName: true,
+              lastName: true,
+              imageUrl: true,
             },
           },
         },
@@ -181,7 +164,7 @@ export const getReviewsByProvider = async (providerId: string, page: number = 1,
         skip,
         take: limit,
       }),
-      prisma.review.count({
+      prisma.customerReview.count({
         where: {
           revieweeId: providerId,
         },
@@ -205,7 +188,7 @@ export const getReviewsByProvider = async (providerId: string, page: number = 1,
 
 export const getReviewById = async (reviewId: string) => {
   try {
-    const review = await prisma.review.findUnique({
+    const review = await prisma.customerReview.findUnique({
       where: {
         id: reviewId,
       },
@@ -221,14 +204,9 @@ export const getReviewById = async (reviewId: string) => {
         reviewee: {
           select: {
             id: true,
-            userId: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                imageUrl: true,
-              },
-            },
+            firstName: true,
+            lastName: true,
+            imageUrl: true,
           },
         },
       },
@@ -248,7 +226,7 @@ export const getReviewById = async (reviewId: string) => {
 export const updateReview = async (reviewId: string, data: UpdateReviewData, userId: string) => {
   try {
     // Check if review exists and belongs to the user
-    const existingReview = await prisma.review.findUnique({
+    const existingReview = await prisma.customerReview.findUnique({
       where: {
         id: reviewId,
       },
@@ -262,7 +240,7 @@ export const updateReview = async (reviewId: string, data: UpdateReviewData, use
       throw new Error('Unauthorized to update this review');
     }
 
-    const review = await prisma.review.update({
+    const review = await prisma.customerReview.update({
       where: {
         id: reviewId,
       },
@@ -283,14 +261,9 @@ export const updateReview = async (reviewId: string, data: UpdateReviewData, use
         reviewee: {
           select: {
             id: true,
-            userId: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                imageUrl: true,
-              },
-            },
+            firstName: true,
+            lastName: true,
+            imageUrl: true,
           },
         },
       },
@@ -309,7 +282,7 @@ export const updateReview = async (reviewId: string, data: UpdateReviewData, use
 export const deleteReview = async (reviewId: string, userId: string) => {
   try {
     // Check if review exists and belongs to the user
-    const existingReview = await prisma.review.findUnique({
+    const existingReview = await prisma.customerReview.findUnique({
       where: {
         id: reviewId,
       },
@@ -325,7 +298,7 @@ export const deleteReview = async (reviewId: string, userId: string) => {
 
     const providerId = existingReview.revieweeId;
 
-    await prisma.review.delete({
+    await prisma.customerReview.delete({
       where: {
         id: reviewId,
       },
@@ -343,7 +316,7 @@ export const deleteReview = async (reviewId: string, userId: string) => {
 
 export const getCustomerStats = async (customerId: string): Promise<CustomerStats> => {
   try {
-    const reviews = await prisma.review.findMany({
+    const reviews = await prisma.customerReview.findMany({
       where: {
         reviewerId: customerId,
       },
@@ -379,7 +352,7 @@ export const getCustomerStats = async (customerId: string): Promise<CustomerStat
 // Helper function to update provider's average rating
 const updateProviderRating = async (providerId: string) => {
   try {
-    const reviews = await prisma.review.findMany({
+    const reviews = await prisma.customerReview.findMany({
       where: {
         revieweeId: providerId,
       },

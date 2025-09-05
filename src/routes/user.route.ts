@@ -1,5 +1,5 @@
 import { Router } from 'express';
-const router = Router();
+const router: import('express').Router = Router();
 import { createUser,loginUser,getUserProfile,updateUserProfile,deleteUserProfile,checkEmailExistsController,searchUsersController,uploadImageController,createAdminUser,getUserByIdController } from '../controllers/user.controller.js';
 import validate from '../middlewares/validation.middleware.js';
 import { registerSchema,loginSchema,updateProfileSchema } from '../validators/user.validator.js';

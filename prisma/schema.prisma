@@ -27,11 +27,12 @@ model User {
   messagesSent          Message[]        @relation("MessagesSent")
   messagesReceived      Message[]        @relation("MessagesReceived")
   payments              Payment[]
-  reviewsWritten        Review[]         @relation("writtenReviews")
   schedules             Schedule[]
   serviceProvider       ServiceProvider?
-  serviceReviewsWritten ServiceReview[]  @relation("writtenServiceReviews")
   emailQueue            EmailQueue[]
+  customerReviewsWritten CustomerReview[] @relation("CustomerReviewReviewer")
+  customerReviewsReceived CustomerReview[] @relation("CustomerReviewReviewee")
+  writtenServiceReviews ServiceReview[] @relation("writtenServiceReviews")
 
   @@index([email])
   @@index([role])
@@ -54,7 +55,6 @@ model ServiceProvider {
   isVerified     Boolean    @default(true)
   companies      Company[]
   payments       Payment[]
-  reviews        Review[]   @relation("receivedReviews")
   schedules      Schedule[]
   services       Service[]
   user           User       @relation(fields: [userId], references: [id])
@@ -106,13 +106,7 @@ model Service {
   schedules   Schedule[]
   category    Category        @relation(fields: [categoryId], references: [id])
   provider    ServiceProvider @relation(fields: [providerId], references: [id])
-  reviews     ServiceReview[]
-
-  @@index([providerId])
-  @@index([categoryId])
-  @@index([isActive])
-  @@index([price])
-  @@index([createdAt])
+  serviceReviews ServiceReview[]
 }
 
 model Schedule {
@@ -151,17 +145,6 @@ model Payment {
   user          User            @relation(fields: [userId], references: [id])
 }
 
-model Review {
-  id         String          @id @default(cuid())
-  reviewerId String
-  revieweeId String
-  rating     Int
-  comment    String?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  reviewee   ServiceProvider @relation("receivedReviews", fields: [revieweeId], references: [id])
-  reviewer   User            @relation("writtenReviews", fields: [reviewerId], references: [id])
-}
 
 model ServiceReview {
   id         String   @id @default(cuid())
@@ -210,6 +193,18 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id])
   from           User         @relation("MessagesSent", fields: [fromId], references: [id])
   to             User         @relation("MessagesReceived", fields: [toId], references: [id])
+}
+
+model CustomerReview {
+  id         String   @id @default(cuid())
+  reviewerId String
+  revieweeId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  reviewer   User     @relation("CustomerReviewReviewer", fields: [reviewerId], references: [id])
+  reviewee   User     @relation("CustomerReviewReviewee", fields: [revieweeId], references: [id])
 }
 
 enum EmailType {

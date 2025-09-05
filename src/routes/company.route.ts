@@ -4,7 +4,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 import validationMiddleware from '../middlewares/validation.middleware.js';
 import { createCompanySchema, updateCompanySchema } from '../validators/company.validator.js';
 
-const router = express.Router();
+const router: import('express').Router = express.Router();
 
 // All routes require authentication
 router.use(authMiddleware);

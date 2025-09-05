@@ -169,7 +169,7 @@ export const getServices = async (filters: ServiceFilters = {}) => {
         // Get review count and average rating efficiently
         _count: {
           select: {
-            reviews: true
+            serviceReviews: true
           }
         }
       },
@@ -232,7 +232,7 @@ export const getServiceById = async (serviceId: string) => {
         },
         _count: {
           select: {
-            reviews: true,
+            serviceReviews: true,
             schedules: true
           }
         }

@@ -106,25 +106,6 @@ export const updateProvider = async (userId: string, providerData: ProviderUpdat
           images: true,
           isActive: true
         }
-      },
-      reviews: {
-        select: {
-          id: true,
-          rating: true,
-          comment: true,
-          createdAt: true,
-          reviewer: {
-            select: {
-              firstName: true,
-              lastName: true,
-              imageUrl: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 10
       }
     }
   });
@@ -139,8 +120,7 @@ export const deleteProvider = async (userId: string) => {
     include: {
       services: true,
       schedules: { select: { customerConfirmation: true, providerConfirmation: true } },
-      payments: true,
-      reviews: true
+      payments: true
     }
   });
 
@@ -215,24 +195,6 @@ export const getProviderProfile = async (userId: string) => {
         orderBy: {
           createdAt: 'desc'
         }
-      },
-      reviews: {
-        select: {
-          id: true,
-          rating: true,
-          comment: true,
-          createdAt: true,
-          reviewer: {
-            select: {
-              firstName: true,
-              lastName: true,
-              imageUrl: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
       }
     }
   });
@@ -268,25 +230,6 @@ export const getProviderById = async (id: string) => {
           images: true,
           isActive: true
         }
-      },
-      reviews: {
-        select: {
-          id: true,
-          rating: true,
-          comment: true,
-          createdAt: true,
-          reviewer: {
-            select: {
-              firstName: true,
-              lastName: true,
-              imageUrl: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 10
       }
     }
   });

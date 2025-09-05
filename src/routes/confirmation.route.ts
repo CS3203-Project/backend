@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getConfirmationController, upsertConfirmationController, createConfirmationController } from '../controllers/confirmation.controller.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
-const router = Router();
+const router: Router = Router();
 
 // All confirmation routes require authentication
 router.use(authMiddleware);
