@@ -1,4 +1,3 @@
-
 import { prisma } from '../utils/database.js';
 import jwt from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash.js';
@@ -141,7 +140,7 @@ export const getProfile = async (userId: string) => {
       });
       
       // Get latest 5 reviews
-      const recentReviews = await prisma.review.findMany({
+      const recentReviews = await prisma.customerReview.findMany({
         where: { revieweeId: serviceProvider.id },
         select: {
           id: true,

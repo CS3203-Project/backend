@@ -15,7 +15,7 @@ import {
 } from '../validators/services.validator.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 // Apply authentication middleware to all routes
 // router.use(authMiddleware);

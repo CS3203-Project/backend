@@ -9,7 +9,7 @@ import {
   getCustomerStatsController
 } from '../controllers/review.controller.js';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 // Create a review
 router.post('/', createReviewController);

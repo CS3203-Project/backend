@@ -4,7 +4,7 @@ import validate from '../middlewares/validation.middleware.js';
 import { registerSchema } from '../validators/user.validator.js';
 import { prisma } from '../utils/database.js';
 
-const router = Router();
+const router: import('express').Router = Router();
 
 // Middleware to check if any admin exists
 const checkNoAdminExists = async (req: any, res: any, next: any) => {
