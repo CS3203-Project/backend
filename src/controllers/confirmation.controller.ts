@@ -207,6 +207,17 @@ export const createConfirmationController = async (req: AuthenticatedRequest, re
     
     // Convert to confirmation format
     const confirmation = scheduleToConfirmation(schedule, conversationId);
+
+    // Notify communication service for real-time update
+    try {
+      await fetch('http://localhost:3001/api/confirmation/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId, confirmation })
+      });
+    } catch (notifyErr) {
+      console.error('Failed to notify communication service:', notifyErr);
+    }
     
     res.status(201).json(confirmation);
   } catch (error) {
@@ -267,6 +278,17 @@ export const upsertConfirmationController = async (req: AuthenticatedRequest, re
     
     // Convert to confirmation format
     const confirmation = scheduleToConfirmation(schedule, conversationId);
+
+    // Notify communication service for real-time update
+    try {
+      await fetch('http://localhost:3001/api/confirmation/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId, confirmation })
+      });
+    } catch (notifyErr) {
+      console.error('Failed to notify communication service:', notifyErr);
+    }
     
     res.json(confirmation);
   } catch (error) {
