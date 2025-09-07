@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers, getUserById, createAdmin } from '../services/user.service.js';
-import { uploadToS3, deleteFromS3 } from '../utils/s3.js';
+import { uploadToS3, deleteFromS3, uploadVideoToS3 } from '../utils/s3.js';
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -144,6 +144,24 @@ export const getUserByIdController = async (req: Request, res: Response, next: N
     }
     const user = await getUserById(userId);
     res.status(200).json(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const uploadVideoController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!(req as any).file) {
+      return res.status(400).json({ message: 'No video file provided' });
+    }
+
+    // Upload video to S3
+    const videoUrl = await uploadVideoToS3((req as any).file, 'service-videos');
+    
+    res.status(200).json({ 
+      message: 'Video uploaded successfully',
+      videoUrl 
+    });
   } catch (err) {
     next(err);
   }

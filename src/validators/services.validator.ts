@@ -45,6 +45,28 @@ export const createServiceSchema = Joi.object({
     'string.uri': 'Each image must be a valid URL'
   }),
   
+  videoUrl: Joi.string().optional().custom((value, helpers) => {
+    // Allow empty/null values
+    if (!value) return value;
+    
+    try {
+      // Try to create a URL object - this will handle most valid URLs including S3 URLs with encoded characters
+      new URL(value);
+      return value;
+    } catch (error) {
+      // If URL constructor fails, try to URL encode any spaces and special characters
+      try {
+        const encodedUrl = value.replace(/\s/g, '%20');
+        new URL(encodedUrl);
+        return value; // Return original value, not encoded
+      } catch (encodedError) {
+        return helpers.error('string.uri');
+      }
+    }
+  }).messages({
+    'string.uri': 'Video URL must be a valid URL'
+  }),
+  
   isActive: Joi.boolean().optional().default(true),
   
   workingTime: Joi.array().items(
@@ -87,6 +109,28 @@ export const updateServiceSchema = Joi.object({
   images: Joi.array().items(Joi.string().uri()).max(5).optional().messages({
     'array.max': 'Maximum 5 images allowed',
     'string.uri': 'Each image must be a valid URL'
+  }),
+  
+  videoUrl: Joi.string().optional().custom((value, helpers) => {
+    // Allow empty/null values
+    if (!value) return value;
+    
+    try {
+      // Try to create a URL object - this will handle most valid URLs including S3 URLs with encoded characters
+      new URL(value);
+      return value;
+    } catch (error) {
+      // If URL constructor fails, try to URL encode any spaces and special characters
+      try {
+        const encodedUrl = value.replace(/\s/g, '%20');
+        new URL(encodedUrl);
+        return value; // Return original value, not encoded
+      } catch (encodedError) {
+        return helpers.error('string.uri');
+      }
+    }
+  }).messages({
+    'string.uri': 'Video URL must be a valid URL'
   }),
   
   isActive: Joi.boolean().optional(),

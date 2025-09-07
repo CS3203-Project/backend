@@ -6,8 +6,21 @@ import * as serviceService from '../services/services.service.js';
  */
 export const createService = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('=== SERVICE CREATION DEBUG ===');
+    console.log('Request body received:', JSON.stringify(req.body, null, 2));
+    
     const serviceData = req.body;
+    
+    // Debug: Check if videoUrl is present
+    console.log('Video URL in service data:', serviceData.videoUrl);
+    console.log('Video URL type:', typeof serviceData.videoUrl);
+    console.log('Video URL length:', serviceData.videoUrl ? serviceData.videoUrl.length : 'N/A');
+    
+    console.log('Calling service creation...');
     const newService = await serviceService.createService(serviceData);
+    
+    console.log('Service created successfully. Result:', JSON.stringify(newService, null, 2));
+    console.log('Video URL in created service:', (newService as any).videoUrl);
     
     res.status(201).json({
       success: true,
@@ -15,6 +28,10 @@ export const createService = async (req: Request, res: Response, next: NextFunct
       data: newService
     });
   } catch (error) {
+    console.error('=== SERVICE CREATION ERROR ===');
+    console.error('Error details:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     next(error);
   }
 };

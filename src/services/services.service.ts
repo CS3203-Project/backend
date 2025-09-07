@@ -10,6 +10,7 @@ interface ServiceCreateData {
   currency?: string;
   tags?: string[];
   images?: string[];
+  videoUrl?: string;  // Add videoUrl to interface
   isActive?: boolean;
   workingTime?: string[];
 }
@@ -29,6 +30,9 @@ interface ServiceFilters {
  */
 export const createService = async (serviceData: ServiceCreateData) => {
   try {
+    console.log('=== SERVICE SERVICE DEBUG ===');
+    console.log('Service data received in service layer:', JSON.stringify(serviceData, null, 2));
+    
     const {
       providerId,
       categoryId,
@@ -41,6 +45,11 @@ export const createService = async (serviceData: ServiceCreateData) => {
       isActive = true,
       workingTime = []
     } = serviceData;
+
+    // Debug: Extract videoUrl specifically
+    const videoUrl = serviceData.videoUrl;
+    console.log('Extracted videoUrl:', videoUrl);
+    console.log('VideoUrl type:', typeof videoUrl);
 
     // Validate required fields
     if (!providerId) {
@@ -69,20 +78,27 @@ export const createService = async (serviceData: ServiceCreateData) => {
       throw new Error('Category not found');
     }
 
+    // Prepare data for Prisma create
+    const createData = {
+      providerId,
+      categoryId,
+      title,
+      description,
+      price,
+      currency,
+      tags,
+      images,
+      isActive,
+      workingTime,
+      videoUrl // Make sure videoUrl is included
+    };
+
+    console.log('Data being sent to Prisma create:', JSON.stringify(createData, null, 2));
+    console.log('VideoUrl in create data:', createData.videoUrl);
+
     // Create the service
     const newService = await prisma.service.create({
-      data: {
-        providerId,
-        categoryId,
-        title,
-        description,
-        price,
-        currency,
-        tags,
-        images,
-        isActive,
-        workingTime
-      },
+      data: createData,
       include: {
         provider: {
           include: {
@@ -99,8 +115,14 @@ export const createService = async (serviceData: ServiceCreateData) => {
       }
     });
 
+    console.log('Service created by Prisma. Checking result...');
+    console.log('Service ID:', newService.id);
+    console.log('Service videoUrl field:', (newService as any).videoUrl);
+
     return newService;
   } catch (error) {
+    console.error('=== SERVICE SERVICE ERROR ===');
+    console.error('Error in createService:', error);
     throw new Error(`Failed to create service: ${error.message}`);
   }
 };
@@ -135,21 +157,9 @@ export const getServices = async (filters: ServiceFilters = {}) => {
       where: whereClause,
       skip,
       take,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        price: true,
-        currency: true,
-        tags: true,
-        images: true,
-        isActive: true,
-        createdAt: true,
+      include: {
         provider: {
-          select: {
-            id: true,
-            averageRating: true,
-            totalReviews: true,
+          include: {
             user: {
               select: {
                 firstName: true,
@@ -166,7 +176,6 @@ export const getServices = async (filters: ServiceFilters = {}) => {
             slug: true
           }
         },
-        // Get review count and average rating efficiently
         _count: {
           select: {
             serviceReviews: true
@@ -193,24 +202,9 @@ export const getServiceById = async (serviceId: string) => {
   try {
     const service = await prisma.service.findUnique({
       where: { id: serviceId },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        price: true,
-        currency: true,
-        tags: true,
-        images: true,
-        isActive: true,
-        workingTime: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         provider: {
-          select: {
-            id: true,
-            bio: true,
-            averageRating: true,
-            totalReviews: true,
+          include: {
             user: {
               select: {
                 firstName: true,
@@ -238,6 +232,10 @@ export const getServiceById = async (serviceId: string) => {
         }
       }
     });
+
+    console.log('=== GET SERVICE BY ID DEBUG ===');
+    console.log('Service found:', service?.id);
+    console.log('Service videoUrl:', (service as any)?.videoUrl);
 
     return service;
   } catch (error) {
@@ -322,24 +320,9 @@ export const getServiceByConversationId = async (conversationId: string) => {
       where: { id: conversationId },
       include: {
         service: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            price: true,
-            currency: true,
-            tags: true,
-            images: true,
-            isActive: true,
-            workingTime: true,
-            createdAt: true,
-            updatedAt: true,
+          include: {
             provider: {
-              select: {
-                id: true,
-                bio: true,
-                averageRating: true,
-                totalReviews: true,
+              include: {
                 user: {
                   select: {
                     firstName: true,
