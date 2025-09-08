@@ -79,13 +79,21 @@ model Company {
 
 model Category {
   id          String     @id @default(cuid())
-  name        String?
+  name        String     @unique
   slug        String     @unique
   description String?
   parentId    String?
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
+  imageUrl    String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   services    Service[]
+
+  @@index([parentId])
+  @@index([isActive])
+  @@index([name])
 }
 
 model Service {
