@@ -66,7 +66,7 @@ export const createReview = async (data: CreateReviewData) => {
       },
     });
 
-    // Update provider's average rating
+    // Update provider's average rating (using revieweeId which is the user ID)
     await updateProviderRating(data.revieweeId);
 
     return review;
@@ -269,7 +269,7 @@ export const updateReview = async (reviewId: string, data: UpdateReviewData, use
       },
     });
 
-    // Update provider's average rating
+    // Update provider's average rating (using revieweeId which is the user ID)
     await updateProviderRating(existingReview.revieweeId);
 
     return review;
@@ -296,7 +296,7 @@ export const deleteReview = async (reviewId: string, userId: string) => {
       throw new Error('Unauthorized to delete this review');
     }
 
-    const providerId = existingReview.revieweeId;
+    const revieweeUserId = existingReview.revieweeId;
 
     await prisma.customerReview.delete({
       where: {
@@ -304,8 +304,8 @@ export const deleteReview = async (reviewId: string, userId: string) => {
       },
     });
 
-    // Update provider's average rating
-    await updateProviderRating(providerId);
+    // Update provider's average rating (using userId which is the user ID)
+    await updateProviderRating(revieweeUserId);
 
     return { message: 'Review deleted successfully' };
   } catch (error) {
@@ -350,11 +350,23 @@ export const getCustomerStats = async (customerId: string): Promise<CustomerStat
 };
 
 // Helper function to update provider's average rating
-const updateProviderRating = async (providerId: string) => {
+const updateProviderRating = async (userId: string) => {
   try {
+    // First check if the user is a service provider
+    const serviceProvider = await prisma.serviceProvider.findUnique({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (!serviceProvider) {
+      console.log(`User ${userId} is not a service provider, skipping rating update`);
+      return;
+    }
+
     const reviews = await prisma.customerReview.findMany({
       where: {
-        revieweeId: providerId,
+        revieweeId: userId,
       },
       select: {
         rating: true,
@@ -368,7 +380,7 @@ const updateProviderRating = async (providerId: string) => {
 
     await prisma.serviceProvider.update({
       where: {
-        id: providerId,
+        userId: userId,
       },
       data: {
         averageRating: averageRating,

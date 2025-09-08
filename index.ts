@@ -10,6 +10,7 @@ try {
 }
 
 import { prisma } from './src/utils/database.js';
+import { queueService } from './src/services/queue.service.js';
 import express, { type Application } from 'express';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -84,6 +85,16 @@ async function startServer() {
   if (!dbConnected) {
     console.error('💥 Server startup aborted due to database connection failure');
     process.exit(1);
+  }
+
+  // Initialize queue service
+  try {
+    await queueService.connect();
+    queueService.setupGracefulShutdown();
+    console.log('✅ RabbitMQ connection established');
+  } catch (error) {
+    console.error('⚠️ RabbitMQ connection failed, emails will not be sent:', error);
+    // Don't exit - continue without email functionality
   }
   
   app.listen(PORT, () => {
