@@ -56,7 +56,7 @@ export const updateReviewController = async (req: Request, res: Response, next: 
     const { reviewId } = req.params;
     const reviewerId = req.body.reviewerId;
     const updateData = req.body;
-    const review = await updateReview(reviewId, reviewerId, updateData);
+    const review = await updateReview(reviewId, updateData, reviewerId);
     res.status(200).json({ message: 'Review updated', review });
   } catch (err) {
     next(err);

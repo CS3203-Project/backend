@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/database.js';
+import { queueService } from '../services/queue.service.js';
 
 // Confirmation data now maps to Schedule table fields
 // conversationId will be used to find related schedules via conversation user IDs
@@ -134,6 +135,37 @@ function scheduleToConfirmation(schedule: any, conversationId: string): Conversa
 // Remove the in-memory store as we're now using the database
 // const confirmationStore = new Map<string, ConversationConfirmation>();
 
+// Helper function to send email notifications
+async function sendConfirmationEmails(schedule: any, conversationId: string, eventType: 'BOOKING_CONFIRMATION' | 'BOOKING_CANCELLATION_MODIFICATION') {
+  try {
+    const emailData = {
+      conversationId,
+      scheduleId: schedule.id,
+      customerEmail: schedule.user.email,
+      providerEmail: schedule.provider.user.email,
+      customerName: schedule.user.fullName || schedule.user.email,
+      providerName: schedule.provider.user.fullName || schedule.provider.user.email,
+      serviceName: schedule.service.title,
+      startDate: schedule.startTime,
+      endDate: schedule.endTime,
+      serviceFee: schedule.serviceFee ? parseFloat(schedule.serviceFee.toString()) : undefined,
+      currency: schedule.currency || 'USD'
+    };
+
+    if (eventType === 'BOOKING_CONFIRMATION') {
+      await queueService.sendBookingConfirmation(emailData);
+    } else {
+      await queueService.sendBookingModification({
+        ...emailData,
+        message: 'Booking details have been updated'
+      });
+    }
+  } catch (emailError) {
+    console.error(`Failed to send ${eventType} email:`, emailError);
+    // Continue without failing the main operation
+  }
+}
+
 export const getConfirmationController = async (req: Request, res: Response) => {
   try {
     const { conversationId } = req.params;
@@ -211,6 +243,9 @@ export const createConfirmationController = async (req: Request, res: Response) 
     } catch (notifyErr) {
       console.error('Failed to notify communication service:', notifyErr);
     }
+
+    // Send email notification
+    await sendConfirmationEmails(schedule, conversationId, 'BOOKING_CONFIRMATION');
     
     res.status(201).json(confirmation);
   } catch (error) {
@@ -282,6 +317,9 @@ export const upsertConfirmationController = async (req: Request, res: Response) 
     } catch (notifyErr) {
       console.error('Failed to notify communication service:', notifyErr);
     }
+
+    // Send email notification
+    await sendConfirmationEmails(schedule, conversationId, 'BOOKING_CANCELLATION_MODIFICATION');
     
     res.json(confirmation);
   } catch (error) {
