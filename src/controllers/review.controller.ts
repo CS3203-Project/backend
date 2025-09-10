@@ -8,11 +8,52 @@ import {
   deleteReview,
   getCustomerStats
 } from '../services/review.service.js';
+import { queueService } from '../services/queue.service.js';
+import { prisma } from '../utils/database.js';
 
 export const createReviewController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { reviewerId, revieweeId, rating, comment } = req.body;
     const review = await createReview({ reviewerId, revieweeId, rating, comment });
+    
+    // Send email notification for new review
+    try {
+      // Get full user data for email notifications
+      const [reviewer, reviewee] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: reviewerId },
+          select: { email: true, firstName: true, lastName: true }
+        }),
+        prisma.user.findUnique({
+          where: { id: revieweeId },
+          select: { email: true, firstName: true, lastName: true }
+        })
+      ]);
+
+      if (reviewer && reviewee) {
+        await queueService.sendMessageOrReviewNotification({
+          customerEmail: reviewer.email,
+          providerEmail: reviewee.email,
+          customerName: `${reviewer.firstName} ${reviewer.lastName}`.trim() || reviewer.email,
+          providerName: `${reviewee.firstName} ${reviewee.lastName}`.trim() || reviewee.email,
+          reviewData: {
+            rating,
+            comment,
+            reviewerName: `${reviewer.firstName} ${reviewer.lastName}`.trim() || reviewer.email
+          },
+          notificationType: 'REVIEW',
+          metadata: {
+            reviewId: review.id,
+            rating: rating
+          }
+        });
+        console.log('📧 Review notification email queued successfully');
+      }
+    } catch (emailError) {
+      console.error('❌ Failed to queue review notification email:', emailError);
+      // Don't fail the review creation if email fails
+    }
+    
     res.status(201).json({ message: 'Review created', review });
   } catch (err) {
     next(err);

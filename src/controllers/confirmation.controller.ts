@@ -35,18 +35,45 @@ async function findOrCreateScheduleForConversation(conversationId: string): Prom
     include: { serviceProvider: true }
   });
 
-  const providerUser = users.find(user => user.serviceProvider);
-  const customerUser = users.find(user => !user.serviceProvider);
+  // Try to determine provider and customer based on service provider status
+  let providerUser = users.find(user => user.serviceProvider);
+  let customerUser = users.find(user => !user.serviceProvider);
+
+  // Handle case where both users are service providers
+  if (!customerUser && users.length === 2 && users.every(user => user.serviceProvider)) {
+    // In provider-to-provider conversations, we'll treat the first user as the "service provider"
+    // and the second as the "customer" for the purpose of creating a schedule
+    // This allows for scenarios like: provider A hiring provider B, or collaboration
+    providerUser = users[0];
+    customerUser = users[1];
+  }
+
+  // Handle case where both users are regular users (no service providers)
+  if (!providerUser && users.length === 2 && users.every(user => !user.serviceProvider)) {
+    throw new Error('Cannot create service confirmation between two regular users - at least one must be a service provider');
+  }
 
   if (!providerUser || !customerUser) {
     throw new Error('Unable to determine provider and customer in conversation');
   }
 
   // Try to find existing schedule for this conversation using proper IDs
+  // For provider-to-provider conversations, we need to be more flexible in finding existing schedules
+  // since either provider could be providing service to the other
   let schedule = await prisma.schedule.findFirst({
     where: {
-      userId: customerUser.id,
-      providerId: providerUser.serviceProvider!.id
+      OR: [
+        // Standard case: customerUser as customer, providerUser as provider
+        {
+          userId: customerUser.id,
+          providerId: providerUser.serviceProvider!.id
+        },
+        // Reverse case: in case there's already a schedule with roles reversed
+        ...(customerUser.serviceProvider ? [{
+          userId: providerUser.id,
+          providerId: customerUser.serviceProvider.id
+        }] : [])
+      ]
     },
     include: {
       user: true,
@@ -154,15 +181,31 @@ async function sendConfirmationEmails(schedule: any, conversationId: string, eve
 
     if (eventType === 'BOOKING_CONFIRMATION') {
       await queueService.sendBookingConfirmation(emailData);
+      console.log('📧 Booking confirmation emails queued successfully');
     } else {
       await queueService.sendBookingModification({
         ...emailData,
         message: 'Booking details have been updated'
       });
+      console.log('📧 Booking modification emails queued successfully');
     }
   } catch (emailError) {
-    console.error(`Failed to send ${eventType} email:`, emailError);
-    // Continue without failing the main operation
+    console.error(`❌ Failed to queue ${eventType} emails:`, emailError);
+    
+    // Enhanced error logging for better debugging
+    if (emailError.message?.includes('daily limit') || emailError.message?.includes('sending limit')) {
+      console.error('🚫 Email service has hit daily sending limits');
+      console.error('💡 Recommendation: Upgrade to a professional email service (SendGrid, AWS SES, Mailgun)');
+      console.error('📝 Booking was still processed successfully - only email notifications failed');
+    } else if (emailError.message?.includes('authentication')) {
+      console.error('🔐 Email service authentication failed');
+      console.error('💡 Check email credentials and app password configuration');
+    } else {
+      console.error('❓ Unknown email service error - please check email service health');
+    }
+    
+    // Don't fail the main operation - booking confirmations should work even if emails fail
+    console.log('✅ Booking operation completed successfully despite email notification failure');
   }
 }
 
