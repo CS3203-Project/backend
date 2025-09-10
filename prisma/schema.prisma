@@ -162,14 +162,14 @@ model ServiceReview {
 
 model EmailQueue {
   id        String    @id @default(cuid())
-  userId    String
+  userId    String?
   to        String
   subject   String
   html      String
   emailType EmailType
   sentAt    DateTime?
   createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id])
+  user      User?     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([emailType])

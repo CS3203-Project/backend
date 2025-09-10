@@ -183,6 +183,29 @@ class QueueService {
     await this.publishEmailEvent(event);
   }
 
+  async sendMessageOrReviewNotification(data: {
+    conversationId?: string;
+    customerEmail: string;
+    providerEmail: string;
+    customerName: string;
+    providerName: string;
+    message?: string;
+    reviewData?: any;
+    notificationType: 'MESSAGE' | 'REVIEW';
+    metadata?: Record<string, any>;
+  }): Promise<void> {
+    const event: EmailEvent = {
+      type: 'NEW_MESSAGE_OR_REVIEW',
+      data: {
+        ...data,
+        serviceName: data.notificationType === 'REVIEW' ? 'Service Review' : 'New Message'
+      },
+      timestamp: new Date().toISOString()
+    };
+    
+    await this.publishEmailEvent(event);
+  }
+
   async close(): Promise<void> {
     try {
       if (this.channel) {
