@@ -176,6 +176,13 @@ model EmailQueue {
   @@index([sentAt])
   @@map("email_queue")
 }
+  model Admin {
+    id         Int    @id @default(autoincrement())
+    username   String @unique
+    password   String
+    firstName  String
+    lastName   String
+  }
 
 model Conversation {
   id         String    @id @default(uuid())
