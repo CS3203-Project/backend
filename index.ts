@@ -23,6 +23,7 @@ import adminRoutes from './src/routes/admin.route.js';
 import confirmationRoutes from './src/routes/confirmation.route.js'; 
 import reviewRoutes from './src/routes/review.route.js';
 import serviceReviewRoutes from './src/routes/serviceReview.route.js';
+import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index.js';
 
 // Simple database test function
 async function testDatabaseConnection() {
@@ -73,6 +74,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/confirmations', confirmationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/service-reviews', serviceReviewRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+
+console.log(`🤖 ${CHATBOT_MODULE_INFO.name} loaded with endpoints:`, CHATBOT_MODULE_INFO.endpoints);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
