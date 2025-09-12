@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as serviceService from '../services/services.service.js';
+import { semanticSearchService } from '../services/semantic-search.service.js';
 
 /**
  * Create a new service
@@ -149,6 +150,110 @@ export const getServiceByConversationId = async (req: Request, res: Response, ne
       success: true,
       message: 'Service retrieved successfully',
       data: service
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Semantic search for services
+ */
+export const searchServices = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { query, limit, threshold, categoryId, providerId, minPrice, maxPrice } = req.query;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Search query is required'
+      });
+    }
+
+    const searchOptions = {
+      query: query as string,
+      limit: limit ? parseInt(limit as string) : 20,
+      threshold: threshold ? parseFloat(threshold as string) : 0.7,
+      categoryId: categoryId as string,
+      providerId: providerId as string,
+      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+    };
+
+    const results = await semanticSearchService.searchServices(searchOptions);
+
+    res.status(200).json({
+      success: true,
+      message: 'Semantic search completed successfully',
+      data: {
+        query: query,
+        results: results,
+        count: results.length
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Find similar services to a given service
+ */
+export const getSimilarServices = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { limit } = req.query;
+
+    const similarServices = await semanticSearchService.findSimilarServices(
+      id!,
+      limit ? parseInt(limit as string) : 5
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Similar services retrieved successfully',
+      data: similarServices
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update embeddings for a specific service
+ */
+export const updateServiceEmbeddings = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    await semanticSearchService.updateServiceEmbeddings(id!);
+
+    res.status(200).json({
+      success: true,
+      message: 'Service embeddings updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Batch update embeddings for all services
+ */
+export const updateAllServiceEmbeddings = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { batchSize } = req.query;
+
+    const updatedCount = await semanticSearchService.updateAllServiceEmbeddings(
+      batchSize ? parseInt(batchSize as string) : 10
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Batch embedding update completed. Updated ${updatedCount} services.`,
+      data: {
+        updatedCount
+      }
     });
   } catch (error) {
     next(error);

@@ -5,7 +5,11 @@ import {
   getServiceById,
   updateService,
   deleteService,
-  getServiceByConversationId
+  getServiceByConversationId,
+  searchServices,
+  getSimilarServices,
+  updateServiceEmbeddings,
+  updateAllServiceEmbeddings
 } from '../controllers/services.controller.js';
 import validate from '../middlewares/validation.middleware.js';
 import {
@@ -30,6 +34,20 @@ const router: import('express').Router = Router();
 router.post('/', validate(createServiceSchema), createService);
 
 /**
+ * @route   GET /api/services/search
+ * @desc    Semantic search for services
+ * @access  Public
+ */
+router.get('/search', searchServices);
+
+/**
+ * @route   POST /api/services/embeddings/batch
+ * @desc    Batch update embeddings for all services
+ * @access  Private (Admin)
+ */
+router.post('/embeddings/batch', updateAllServiceEmbeddings);
+
+/**
  * @route   GET /api/services
  * @desc    Get all services with optional filtering
  * @access  Public
@@ -49,6 +67,20 @@ router.get('/:id', validate(serviceIdSchema, 'params'), getServiceById);
  * @access  Public
  */
 router.get('/conversation/:conversationId', validate(conversationIdSchema, 'params'), getServiceByConversationId);
+
+/**
+ * @route   GET /api/services/:id/similar
+ * @desc    Get similar services to a given service
+ * @access  Public
+ */
+router.get('/:id/similar', validate(serviceIdSchema, 'params'), getSimilarServices);
+
+/**
+ * @route   POST /api/services/:id/embeddings
+ * @desc    Update embeddings for a specific service
+ * @access  Private (Admin)
+ */
+router.post('/:id/embeddings', validate(serviceIdSchema, 'params'), updateServiceEmbeddings);
 
 /**
  * @route   PUT /api/services/:id
