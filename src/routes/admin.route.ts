@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { adminController } from '../controllers/admin.controller.js';
 import { adminAuthMiddleware } from '../middlewares/admin.middleware.js';
 import { validateAdminLogin, validateAdminRegistration, validateAdminUpdate } from '../validators/admin.validator.js';
 
-const router = Router();
+const router: RouterType = Router();
 
 // Public routes
 router.post('/register', validateAdminRegistration, adminController.register);
