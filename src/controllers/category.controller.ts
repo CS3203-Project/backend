@@ -188,10 +188,11 @@ export const deleteCategory = async (req: Request, res: Response, next: NextFunc
  */
 export const getRootCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { includeChildren } = req.query;
+    const { includeChildren, includeServices } = req.query;
     
     const options = {
-      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' })
+      ...(includeChildren !== undefined && { includeChildren: includeChildren === 'true' }),
+      ...(includeServices !== undefined && { includeServices: includeServices === 'true' })
     };
 
     const categories = await categoryService.getRootCategories(options);
