@@ -39,6 +39,7 @@ interface SearchOptions {
 
 interface RootCategoryOptions {
   includeChildren?: boolean;
+  includeServices?: boolean;
 }
 
 // Custom error class for better error handling
@@ -162,9 +163,7 @@ export const getAllCategories = async (filters: CategoryFilters = {}) => {
             id: true,
             name: true,
             slug: true,
-            description: true
-          },
-          include: {
+            description: true,
             _count: {
               select: {
                 services: true
@@ -483,13 +482,13 @@ export const deleteCategory = async (id: string, options: DeleteOptions = {}) =>
  */
 export const getRootCategories = async (options: RootCategoryOptions = {}) => {
   try {
-    const { includeChildren = true } = options;
+    const { includeChildren = true, includeServices = true } = options;
 
     return await getAllCategories({
       parentId: null,
       includeChildren,
       includeParent: false,
-      includeServices: true
+      includeServices
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
