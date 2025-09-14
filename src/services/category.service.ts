@@ -215,12 +215,6 @@ export const getCategoryById = async (id: string, options: CategoryOptions = {})
           }
         } : false,
         children: includeChildren ? {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true
-          },
           include: {
             _count: {
               select: {
@@ -280,12 +274,6 @@ export const getCategoryBySlug = async (slug: string, options: CategoryOptions =
           }
         } : false,
         children: includeChildren ? {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true
-          },
           include: {
             _count: {
               select: {
@@ -586,12 +574,6 @@ export const searchCategories = async (searchTerm: string, options: SearchOption
           }
         } : false,
         children: includeChildren ? {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true
-          },
           include: {
             _count: {
               select: {
