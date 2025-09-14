@@ -163,6 +163,13 @@ export const getAllCategories = async (filters: CategoryFilters = {}) => {
             name: true,
             slug: true,
             description: true
+          },
+          include: {
+            _count: {
+              select: {
+                services: true
+              }
+            }
           }
         } : false,
         _count: includeServices ? {
@@ -214,6 +221,13 @@ export const getCategoryById = async (id: string, options: CategoryOptions = {})
             name: true,
             slug: true,
             description: true
+          },
+          include: {
+            _count: {
+              select: {
+                services: true
+              }
+            }
           }
         } : false,
         services: includeServices ? {
@@ -272,6 +286,13 @@ export const getCategoryBySlug = async (slug: string, options: CategoryOptions =
             name: true,
             slug: true,
             description: true
+          },
+          include: {
+            _count: {
+              select: {
+                services: true
+              }
+            }
           }
         } : false,
         services: includeServices ? {
@@ -571,6 +592,13 @@ export const searchCategories = async (searchTerm: string, options: SearchOption
             name: true,
             slug: true,
             description: true
+          },
+          include: {
+            _count: {
+              select: {
+                services: true
+              }
+            }
           }
         } : false,
         _count: {
