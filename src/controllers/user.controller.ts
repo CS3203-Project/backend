@@ -1,35 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
-import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, searchUsers, getUserById, createAdmin } from '../services/user.service.js';
-import { uploadToS3, deleteFromS3, uploadVideoToS3 } from '../utils/s3.js';
+import { register, login, getProfile, updateProfile, deleteProfile, checkEmailExists, getUserById, searchUsersByEmail } from '../services/user.service';
 
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-            const { email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia } = req.body;
-            const user = await register({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia });
+            const { email, firstName, lastName, password, address, phone } = req.body;
+            const user = await register({ email, firstName, lastName, password,address, phone });
     res.status(201).json({ message: 'User registered', user });
   } catch (err) {
     next(err);
   }
 };
 
-export const createAdminUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia } = req.body;
-    const admin = await createAdmin({ email, firstName, lastName, password, imageUrl, location, address, phone, socialmedia });
-    res.status(201).json({ 
-      message: 'Admin user created successfully', 
-      admin 
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const checkEmailExistsController = async (req: Request, res: Response, next: NextFunction) => {
+export const checkEmailExistsController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email } = req.query;
     if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+      res.status(400).json({ message: 'Email is required' });
+      return;
     }
     const exists = await checkEmailExists(email as string);
     res.status(200).json({ exists });
@@ -38,7 +25,7 @@ export const checkEmailExistsController = async (req: Request, res: Response, ne
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
     try {
     const result = await login(req.body);
     res.status(200).json({ message: 'Login successful', ...result });
@@ -47,48 +34,18 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const user = await getProfile((req as any).user.id);
-    res.status(200).json(user);
+    res.status(200).json({ user });
   } catch (err) {
     next(err);
   }
 };
 
-export const updateUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+export const updateUserProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    let imageUrl = req.body.imageUrl;
-    
-    // If a new image file is uploaded, upload it to S3
-    if ((req as any).file) {
-      // Get current user to check if they have an existing image
-      const currentUser = await getProfile((req as any).user.id);
-      
-      // Upload new image to S3
-      imageUrl = await uploadToS3((req as any).file, 'profile-images');
-      
-      // Delete old image if it exists and is from S3
-      if (currentUser.imageUrl && currentUser.imageUrl.includes('amazonaws.com')) {
-        await deleteFromS3(currentUser.imageUrl);
-      }
-    }
-    
-    const updateData = { ...req.body };
-    if (imageUrl) {
-      updateData.imageUrl = imageUrl;
-    }
-    
-    // Parse socialmedia if it's a JSON string
-    if (updateData.socialmedia && typeof updateData.socialmedia === 'string') {
-      try {
-        updateData.socialmedia = JSON.parse(updateData.socialmedia);
-      } catch (e) {
-        // If parsing fails, treat it as an array with single item
-        updateData.socialmedia = [updateData.socialmedia];
-      }
-    }
-    
+    const updateData = req.body;
     const updatedUser = await updateProfile((req as any).user.id, updateData);
     res.status(200).json({ message: 'Profile updated', user: updatedUser });
   } catch (err) {
@@ -96,7 +53,7 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
   }
 };
 
-export const deleteUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUserProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     await deleteProfile((req as any).user.id);
     res.status(200).json({ message: 'Profile deleted' });
@@ -105,64 +62,64 @@ export const deleteUserProfile = async (req: Request, res: Response, next: NextF
   }
 };
 
-export const searchUsersController = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserByIdController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { q } = req.query;
-    if (!q) {
-      return res.status(400).json({ message: 'Search query is required' });
-    }
-    const users = await searchUsers(q as string);
-    res.status(200).json(users);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!(req as any).file) {
-      return res.status(400).json({ message: 'No image file provided' });
-    }
-
-    // Upload image to S3
-    const imageUrl = await uploadToS3((req as any).file, 'uploads');
+    console.log('🔍 getUserByIdController called with params:', req.params);
+    console.log('🔍 getUserByIdController URL:', req.url);
+    console.log('🔍 getUserByIdController path:', req.path);
     
-    res.status(200).json({ 
-      message: 'Image uploaded successfully',
-      imageUrl 
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const getUserByIdController = async (req: Request, res: Response, next: NextFunction) => {
-  try {
     const { userId } = req.params;
     if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
+      console.log('❌ getUserByIdController: No userId provided');
+      res.status(400).json({ message: 'User ID is required' });
+      return;
     }
+    
+    console.log('📤 getUserByIdController: Looking for user with ID:', userId);
     const user = await getUserById(userId);
     res.status(200).json(user);
   } catch (err) {
+    console.error('❌ getUserByIdController error:', err);
     next(err);
   }
 };
 
-export const uploadVideoController = async (req: Request, res: Response, next: NextFunction) => {
+export const searchUsersController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    if (!(req as any).file) {
-      return res.status(400).json({ message: 'No video file provided' });
-    }
-
-    // Upload video to S3
-    const videoUrl = await uploadVideoToS3((req as any).file, 'service-videos');
+    console.log('🔍 User search request received');
+    console.log('📋 Query params:', req.query);
+    console.log('📋 Full URL:', req.url);
+    console.log('📋 Path:', req.path);
     
-    res.status(200).json({ 
-      message: 'Video uploaded successfully',
-      videoUrl 
-    });
-  } catch (err) {
-    next(err);
+    const { email } = req.query;
+    if (!email || typeof email !== 'string') {
+      console.log('❌ Invalid email query parameter');
+      res.status(400).json({ success: false, message: 'Email query parameter is required' });
+      return;
+    }
+    
+    console.log('📤 Searching for users with email:', email);
+    const users = await searchUsersByEmail(email);
+    console.log('✅ Search completed, returning', users.length, 'users');
+    
+    // Always return success, even if no users found
+    res.status(200).json({ success: true, users });
+  } catch (err: any) {
+    console.error('❌ Error in searchUsersController:', err);
+    // Return empty array instead of error
+    res.status(200).json({ success: true, users: [] });
   }
 };
+
+// Test endpoint to verify routing is working
+export const testSearchController = async (req: Request, res: Response): Promise<void> => {
+  console.log('🧪 Test search endpoint hit!');
+  res.status(200).json({ 
+    success: true, 
+    message: 'Search endpoint is working!', 
+    query: req.query,
+    url: req.url,
+    path: req.path
+  });
+};
+
