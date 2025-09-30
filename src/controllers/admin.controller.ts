@@ -250,6 +250,47 @@ export class AdminController {
       });
     }
   }
+
+  async getCustomerCount(req: Request, res: Response): Promise<void> {
+    try {
+      const customerCount = await adminService.getCustomerCount();
+
+      res.status(200).json({
+        success: true,
+        message: 'Customer count fetched successfully',
+        data: {
+          count: customerCount,
+        },
+      });
+    } catch (error: any) {
+      console.error('Get customer count error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message,
+      });
+    }
+  }
+
+  async getAllServicesWithCategories(req: Request, res: Response): Promise<void> {
+    try {
+      const services = await adminService.getAllServicesWithCategories();
+
+      res.status(200).json({
+        success: true,
+        message: 'Services with categories fetched successfully',
+        data: services,
+        count: services.length,
+      });
+    } catch (error: any) {
+      console.error('Get all services with categories error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message,
+      });
+    }
+  }
 }
 
 export const adminController = new AdminController();

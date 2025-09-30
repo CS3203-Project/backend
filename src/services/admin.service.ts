@@ -257,6 +257,67 @@ export class AdminService {
 
     return updatedProvider;
   }
+
+  async getCustomerCount(): Promise<number> {
+    const customerCount = await prisma.user.count({
+      where: {
+        role: 'USER',
+        isActive: true,
+      },
+    });
+
+    return customerCount;
+  }
+
+  async getAllServicesWithCategories() {
+    const services = await prisma.service.findMany({
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            parentId: true,
+            parent: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        provider: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+                location: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            schedules: true,
+            payments: true,
+            serviceReviews: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return services;
+  }
 }
 
 export const adminService = new AdminService();
