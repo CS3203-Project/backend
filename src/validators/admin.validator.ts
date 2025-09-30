@@ -183,3 +183,48 @@ export const validateAdminUpdate = (
 
   next();
 };
+
+const serviceProviderVerificationSchema = Joi.object({
+  isVerified: Joi.boolean()
+    .required()
+    .messages({
+      'boolean.base': 'isVerified must be a boolean value',
+      'any.required': 'isVerified is required',
+    }),
+});
+
+export const validateServiceProviderVerification = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { error } = serviceProviderVerificationSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    const errors = error.details.map((detail) => ({
+      field: detail.path.join('.'),
+      message: detail.message,
+    }));
+
+    res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors,
+    });
+    return;
+  }
+
+  // Validate providerId parameter
+  const { providerId } = req.params;
+  if (!providerId || typeof providerId !== 'string' || providerId.trim() === '') {
+    res.status(400).json({
+      success: false,
+      message: 'Valid provider ID is required',
+    });
+    return;
+  }
+
+  next();
+};

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { adminController } from '../controllers/admin.controller.js';
 import { adminAuthMiddleware } from '../middlewares/admin.middleware.js';
-import { validateAdminLogin, validateAdminRegistration, validateAdminUpdate } from '../validators/admin.validator.js';
+import { validateAdminLogin, validateAdminRegistration, validateAdminUpdate, validateServiceProviderVerification } from '../validators/admin.validator.js';
 
 const router = Router();
 
@@ -13,5 +13,7 @@ router.post('/login', validateAdminLogin, adminController.login);
 router.get('/profile', adminAuthMiddleware, adminController.getProfile);
 router.put('/profile', adminAuthMiddleware, validateAdminUpdate, adminController.updateProfile);
 router.get('/all', adminAuthMiddleware, adminController.getAllAdmins);
+router.get('/service-providers', adminAuthMiddleware, adminController.getAllServiceProviders);
+router.put('/service-providers/:providerId/verification', adminAuthMiddleware, validateServiceProviderVerification, adminController.updateServiceProviderVerification);
 
 export default router;

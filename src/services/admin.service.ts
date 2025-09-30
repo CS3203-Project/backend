@@ -140,6 +140,123 @@ export class AdminService {
 
     return admin;
   }
+
+  async getAllServiceProvidersWithDetails() {
+    const serviceProviders = await prisma.serviceProvider.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            imageUrl: true,
+            location: true,
+            address: true,
+            isEmailVerified: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            lastLoginAt: true,
+            socialmedia: true,
+          },
+        },
+        companies: true,
+        services: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            services: true,
+            schedules: true,
+            payments: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return serviceProviders;
+  }
+
+  async updateServiceProviderVerification(providerId: string, isVerified: boolean): Promise<any> {
+    // First check if the service provider exists
+    const existingProvider = await prisma.serviceProvider.findUnique({
+      where: { id: providerId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (!existingProvider) {
+      throw new Error('Service provider not found');
+    }
+
+    // Update the verification status
+    const updatedProvider = await prisma.serviceProvider.update({
+      where: { id: providerId },
+      data: { isVerified },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            imageUrl: true,
+            location: true,
+            address: true,
+            isEmailVerified: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            lastLoginAt: true,
+            socialmedia: true,
+          },
+        },
+        companies: true,
+        services: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            services: true,
+            schedules: true,
+            payments: true,
+          },
+        },
+      },
+    });
+
+    return updatedProvider;
+  }
 }
 
 export const adminService = new AdminService();

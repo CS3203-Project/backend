@@ -182,6 +182,74 @@ export class AdminController {
       });
     }
   }
+
+  async getAllServiceProviders(req: Request, res: Response): Promise<void> {
+    try {
+      const serviceProviders = await adminService.getAllServiceProvidersWithDetails();
+
+      res.status(200).json({
+        success: true,
+        message: 'Service providers fetched successfully',
+        data: serviceProviders,
+        count: serviceProviders.length,
+      });
+    } catch (error: any) {
+      console.error('Get all service providers error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message,
+      });
+    }
+  }
+
+  async updateServiceProviderVerification(req: Request, res: Response): Promise<void> {
+    try {
+      const { providerId } = req.params;
+      const { isVerified } = req.body;
+
+      // Validate the input
+      if (typeof isVerified !== 'boolean') {
+        res.status(400).json({
+          success: false,
+          message: 'isVerified must be a boolean value (true for approve, false for reject)',
+        });
+        return;
+      }
+
+      if (!providerId) {
+        res.status(400).json({
+          success: false,
+          message: 'Provider ID is required',
+        });
+        return;
+      }
+
+      const updatedProvider = await adminService.updateServiceProviderVerification(providerId, isVerified);
+
+      res.status(200).json({
+        success: true,
+        message: `Service provider ${isVerified ? 'approved' : 'rejected'} successfully`,
+        data: updatedProvider,
+      });
+    } catch (error: any) {
+      console.error('Update service provider verification error:', error);
+      
+      if (error.message === 'Service provider not found') {
+        res.status(404).json({
+          success: false,
+          message: 'Service provider not found',
+        });
+        return;
+      }
+
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message,
+      });
+    }
+  }
 }
 
 export const adminController = new AdminController();
