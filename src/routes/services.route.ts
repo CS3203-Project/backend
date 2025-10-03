@@ -9,7 +9,11 @@ import {
   searchServices,
   getSimilarServices,
   updateServiceEmbeddings,
-  updateAllServiceEmbeddings
+  updateAllServiceEmbeddings,
+  searchServicesByLocation,
+  getLocationFromIP,
+  geocodeAddress,
+  reverseGeocode
 } from '../controllers/services.controller.js';
 import validate from '../middlewares/validation.middleware.js';
 import {
@@ -17,7 +21,10 @@ import {
   updateServiceSchema,
   getServicesQuerySchema,
   serviceIdSchema,
-  conversationIdSchema
+  conversationIdSchema,
+  searchServicesByLocationSchema,
+  geocodeAddressSchema,
+  reverseGeocodeSchema
 } from '../validators/services.validator.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
@@ -39,6 +46,34 @@ router.post('/', validate(createServiceSchema), createService);
  * @access  Public
  */
 router.get('/search', searchServices);
+
+/**
+ * @route   GET /api/services/search/location
+ * @desc    Search services by location with radius filtering
+ * @access  Public
+ */
+router.get('/search/location', validate(searchServicesByLocationSchema, 'query'), searchServicesByLocation);
+
+/**
+ * @route   GET /api/services/location/ip
+ * @desc    Get location information from IP address
+ * @access  Public
+ */
+router.get('/location/ip', getLocationFromIP);
+
+/**
+ * @route   POST /api/services/location/geocode
+ * @desc    Convert address to coordinates
+ * @access  Public
+ */
+router.post('/location/geocode', validate(geocodeAddressSchema), geocodeAddress);
+
+/**
+ * @route   POST /api/services/location/reverse-geocode
+ * @desc    Convert coordinates to address
+ * @access  Public
+ */
+router.post('/location/reverse-geocode', validate(reverseGeocodeSchema), reverseGeocode);
 
 /**
  * @route   POST /api/services/embeddings/batch

@@ -13,6 +13,16 @@ interface ServiceCreateData {
   videoUrl?: string;  // Add videoUrl to interface
   isActive?: boolean;
   workingTime?: string[];
+  // Location fields
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  serviceRadiusKm?: number;
+  locationLastUpdated?: Date;
 }
 
 interface ServiceFilters {
@@ -21,6 +31,17 @@ interface ServiceFilters {
   isActive?: boolean;
   skip?: number;
   take?: number;
+}
+
+interface LocationSearchOptions {
+  latitude: number;
+  longitude: number;
+  radius: number;
+  page: number;
+  limit: number;
+  categoryId?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 /**
@@ -90,7 +111,17 @@ export const createService = async (serviceData: ServiceCreateData) => {
       images,
       isActive,
       workingTime,
-      videoUrl // Make sure videoUrl is included
+      videoUrl, // Make sure videoUrl is included
+      // Location fields
+      latitude: serviceData.latitude,
+      longitude: serviceData.longitude,
+      address: serviceData.address,
+      city: serviceData.city,
+      state: serviceData.state,
+      country: serviceData.country,
+      postalCode: serviceData.postalCode,
+      serviceRadiusKm: serviceData.serviceRadiusKm,
+      locationLastUpdated: serviceData.locationLastUpdated
     };
 
     console.log('Data being sent to Prisma create:', JSON.stringify(createData, null, 2));
@@ -360,6 +391,155 @@ export const getServiceByConversationId = async (conversationId: string) => {
     return conversation.service;
   } catch (error) {
     throw new Error(`Failed to fetch service by conversation ID: ${error.message}`);
+  }
+};
+
+/**
+ * Search services by location using PostGIS spatial queries
+ * @param {LocationSearchOptions} options - Search options
+ * @returns {Promise<Object>} Services and pagination info
+ */
+export const searchServicesByLocation = async (options: LocationSearchOptions) => {
+  try {
+    const {
+      latitude,
+      longitude,
+      radius,
+      page,
+      limit,
+      categoryId,
+      minPrice,
+      maxPrice
+    } = options;
+
+    const offset = (page - 1) * limit;
+
+    // Build WHERE clause for additional filters
+    let whereConditions = ['s."isActive" = true'];
+    const queryParams: any[] = [longitude, latitude, radius * 1000, limit, offset]; // radius in meters
+    let paramIndex = 6;
+
+    if (categoryId) {
+      whereConditions.push(`s."categoryId" = $${paramIndex}`);
+      queryParams.push(categoryId);
+      paramIndex++;
+    }
+
+    if (minPrice !== undefined) {
+      whereConditions.push(`s.price >= $${paramIndex}`);
+      queryParams.push(minPrice);
+      paramIndex++;
+    }
+
+    if (maxPrice !== undefined) {
+      whereConditions.push(`s.price <= $${paramIndex}`);
+      queryParams.push(maxPrice);
+      paramIndex++;
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    // Main query to get services within radius
+    const servicesQuery = `
+      SELECT 
+        s.*,
+        ST_Distance(
+          ST_SetSRID(ST_MakePoint(s.longitude, s.latitude), 4326)::geography,
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+        ) / 1000 as distance_km,
+        sp.id as provider_id,
+        sp."averageRating" as provider_average_rating,
+        sp."totalReviews" as provider_total_reviews,
+        u."firstName" as provider_first_name,
+        u."lastName" as provider_last_name,
+        u."imageUrl" as provider_image_url,
+        c.name as category_name,
+        c.slug as category_slug
+      FROM "Service" s
+      INNER JOIN "ServiceProvider" sp ON s."providerId" = sp.id
+      INNER JOIN "User" u ON sp."userId" = u.id
+      INNER JOIN "Category" c ON s."categoryId" = c.id
+      ${whereClause}
+      AND s.latitude IS NOT NULL 
+      AND s.longitude IS NOT NULL
+      AND ST_DWithin(
+        ST_SetSRID(ST_MakePoint(s.longitude, s.latitude), 4326)::geography,
+        ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+        $3
+      )
+      ORDER BY distance_km ASC
+      LIMIT $4 OFFSET $5
+    `;
+
+    // Count query for pagination
+    const countQuery = `
+      SELECT COUNT(*) 
+      FROM "Service" s
+      ${whereClause}
+      AND s.latitude IS NOT NULL 
+      AND s.longitude IS NOT NULL
+      AND ST_DWithin(
+        ST_SetSRID(ST_MakePoint(s.longitude, s.latitude), 4326)::geography,
+        ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+        $3
+      )
+    `;
+
+    // Execute queries
+    const [servicesResult, countResult] = await Promise.all([
+      prisma.$queryRawUnsafe(servicesQuery, ...queryParams),
+      prisma.$queryRawUnsafe(countQuery, longitude, latitude, radius * 1000, ...queryParams.slice(5, paramIndex - 1))
+    ]);
+
+    const services = servicesResult as any[];
+    const total = parseInt((countResult as any[])[0].count);
+
+    // Format the results
+    const formattedServices = services.map(service => ({
+      id: service.id,
+      title: service.title,
+      description: service.description,
+      price: parseFloat(service.price),
+      currency: service.currency,
+      tags: service.tags,
+      images: service.images,
+      videoUrl: service.videoUrl,
+      isActive: service.isActive,
+      workingTime: service.workingTime,
+      latitude: parseFloat(service.latitude),
+      longitude: parseFloat(service.longitude),
+      address: service.address,
+      city: service.city,
+      state: service.state,
+      country: service.country,
+      postalCode: service.postalCode,
+      serviceRadiusKm: service.serviceRadiusKm ? parseFloat(service.serviceRadiusKm) : null,
+      distance_km: parseFloat(service.distance_km),
+      createdAt: service.createdAt,
+      updatedAt: service.updatedAt,
+      provider: {
+        id: service.provider_id,
+        averageRating: service.provider_average_rating ? parseFloat(service.provider_average_rating) : null,
+        totalReviews: service.provider_total_reviews,
+        user: {
+          firstName: service.provider_first_name,
+          lastName: service.provider_last_name,
+          imageUrl: service.provider_image_url
+        }
+      },
+      category: {
+        name: service.category_name,
+        slug: service.category_slug
+      }
+    }));
+
+    return {
+      services: formattedServices,
+      total
+    };
+  } catch (error) {
+    console.error('Location search error:', error);
+    throw new Error(`Failed to search services by location: ${error.message}`);
   }
 };
 

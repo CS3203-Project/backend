@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as serviceService from '../services/services.service.js';
 import { semanticSearchService } from '../services/semantic-search.service.js';
+import googleMapsService from '../services/googleMaps.service.js';
 
 /**
  * Create a new service
@@ -11,6 +12,46 @@ export const createService = async (req: Request, res: Response, next: NextFunct
     console.log('Request body received:', JSON.stringify(req.body, null, 2));
     
     const serviceData = req.body;
+    
+    // Handle location data if provided
+    if (serviceData.address || (serviceData.latitude && serviceData.longitude)) {
+      try {
+        let locationData;
+        
+        if (serviceData.latitude && serviceData.longitude) {
+          // Manual coordinates provided - validate and reverse geocode
+          if (!googleMapsService.validateCoordinates(serviceData.latitude, serviceData.longitude)) {
+            return res.status(400).json({
+              success: false,
+              message: 'Invalid coordinates provided'
+            });
+          }
+          
+          locationData = await googleMapsService.reverseGeocode(
+            serviceData.latitude, 
+            serviceData.longitude
+          );
+        } else if (serviceData.address) {
+          // Address provided - geocode to get coordinates
+          locationData = await googleMapsService.geocodeAddress(serviceData.address);
+        }
+
+        if (locationData) {
+          // Merge location data into service data
+          serviceData.latitude = locationData.lat;
+          serviceData.longitude = locationData.lng;
+          serviceData.address = locationData.formatted_address;
+          serviceData.city = locationData.city;
+          serviceData.state = locationData.state;
+          serviceData.country = locationData.country;
+          serviceData.postalCode = locationData.postal_code;
+          serviceData.locationLastUpdated = new Date();
+        }
+      } catch (locationError) {
+        console.warn('Location processing failed:', locationError);
+        // Continue without location data rather than failing the entire request
+      }
+    }
     
     // Debug: Check if videoUrl is present
     console.log('Video URL in service data:', serviceData.videoUrl);
@@ -255,6 +296,197 @@ export const updateAllServiceEmbeddings = async (req: Request, res: Response, ne
         updatedCount
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Search services by location
+ */
+export const searchServicesByLocation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { 
+      lat, 
+      lng, 
+      address,
+      radius = 10, // Default 10km radius
+      page = 1,
+      limit = 20,
+      categoryId,
+      minPrice,
+      maxPrice
+    } = req.query;
+
+    let userLat: number, userLng: number;
+
+    // Determine user coordinates
+    if (lat && lng) {
+      userLat = parseFloat(lat as string);
+      userLng = parseFloat(lng as string);
+      
+      if (!googleMapsService.validateCoordinates(userLat, userLng)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid coordinates provided'
+        });
+      }
+    } else if (address) {
+      try {
+        const locationData = await googleMapsService.geocodeAddress(address as string);
+        userLat = locationData.lat;
+        userLng = locationData.lng;
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: 'Could not geocode the provided address'
+        });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Location required for search (provide lat/lng or address)'
+      });
+    }
+
+    const searchOptions = {
+      latitude: userLat,
+      longitude: userLng,
+      radius: parseFloat(radius as string),
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      categoryId: categoryId as string,
+      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
+    };
+
+    const results = await serviceService.searchServicesByLocation(searchOptions);
+
+    res.status(200).json({
+      success: true,
+      message: 'Location-based search completed successfully',
+      data: {
+        services: results.services,
+        pagination: {
+          total: results.total,
+          page: searchOptions.page,
+          limit: searchOptions.limit,
+          totalPages: Math.ceil(results.total / searchOptions.limit)
+        },
+        search_location: {
+          lat: userLat,
+          lng: userLng,
+          radius: searchOptions.radius
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get user location from IP address
+ */
+export const getLocationFromIP = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] as string;
+    
+    try {
+      const locationData = await googleMapsService.getLocationFromIP(clientIP);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Location detected from IP address',
+        data: locationData
+      });
+    } catch (error) {
+      res.status(200).json({
+        success: false,
+        message: 'Could not determine location from IP address',
+        data: null
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Geocode an address
+ */
+export const geocodeAddress = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { address } = req.body;
+
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        message: 'Address is required'
+      });
+    }
+
+    try {
+      const locationData = await googleMapsService.geocodeAddress(address);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Address geocoded successfully',
+        data: locationData
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: 'Could not geocode the provided address'
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reverse geocode coordinates
+ */
+export const reverseGeocode = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { lat, lng, latitude, longitude } = req.body;
+
+    // Support both lat/lng and latitude/longitude formats
+    const latValue = lat || latitude;
+    const lngValue = lng || longitude;
+
+    if (!latValue || !lngValue) {
+      return res.status(400).json({
+        success: false,
+        message: 'Latitude and longitude are required'
+      });
+    }
+
+    const latParsed = parseFloat(latValue);
+    const lngParsed = parseFloat(lngValue);
+
+    if (!googleMapsService.validateCoordinates(latParsed, lngParsed)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid coordinates provided'
+      });
+    }
+
+    try {
+      const locationData = await googleMapsService.reverseGeocode(latParsed, lngParsed);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Coordinates reverse geocoded successfully',
+        data: locationData
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: 'Could not reverse geocode the provided coordinates'
+      });
+    }
   } catch (error) {
     next(error);
   }
