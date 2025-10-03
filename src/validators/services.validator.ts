@@ -87,23 +87,23 @@ export const createServiceSchema = Joi.object({
     'number.max': 'Longitude must be between -180 and 180'
   }),
   
-  address: Joi.string().max(500).optional().messages({
+  address: Joi.string().max(500).allow('').optional().messages({
     'string.max': 'Address must not exceed 500 characters'
   }),
   
-  city: Joi.string().max(100).optional().messages({
+  city: Joi.string().max(100).allow('').optional().messages({
     'string.max': 'City must not exceed 100 characters'
   }),
   
-  state: Joi.string().max(100).optional().messages({
+  state: Joi.string().max(100).allow('').optional().messages({
     'string.max': 'State must not exceed 100 characters'
   }),
   
-  country: Joi.string().max(100).optional().messages({
+  country: Joi.string().max(100).allow('').optional().messages({
     'string.max': 'Country must not exceed 100 characters'
   }),
   
-  postalCode: Joi.string().max(20).optional().messages({
+  postalCode: Joi.string().max(20).allow('').optional().messages({
     'string.max': 'Postal code must not exceed 20 characters'
   }),
   
@@ -189,23 +189,23 @@ export const updateServiceSchema = Joi.object({
     'number.max': 'Longitude must be between -180 and 180'
   }),
   
-  address: Joi.string().max(500).optional().messages({
+  address: Joi.string().max(500).allow('').optional().messages({
     'string.max': 'Address must not exceed 500 characters'
   }),
   
-  city: Joi.string().max(100).optional().messages({
+  city: Joi.string().max(100).allow('').optional().messages({
     'string.max': 'City must not exceed 100 characters'
   }),
   
-  state: Joi.string().max(100).optional().messages({
+  state: Joi.string().max(100).allow('').optional().messages({
     'string.max': 'State must not exceed 100 characters'
   }),
   
-  country: Joi.string().max(100).optional().messages({
+  country: Joi.string().max(100).allow('').optional().messages({
     'string.max': 'Country must not exceed 100 characters'
   }),
   
-  postalCode: Joi.string().max(20).optional().messages({
+  postalCode: Joi.string().max(20).allow('').optional().messages({
     'string.max': 'Postal code must not exceed 20 characters'
   }),
   
