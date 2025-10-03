@@ -1,4 +1,5 @@
 import { prisma } from '../utils/database.js';
+import { embeddingService } from './embedding.service.js';
 
 // Type definitions
 interface ServiceCreateData {
@@ -127,7 +128,7 @@ export const createService = async (serviceData: ServiceCreateData) => {
     console.log('Data being sent to Prisma create:', JSON.stringify(createData, null, 2));
     console.log('VideoUrl in create data:', createData.videoUrl);
 
-    // Create the service
+    // Create the service first
     const newService = await prisma.service.create({
       data: createData,
       include: {
@@ -149,6 +150,33 @@ export const createService = async (serviceData: ServiceCreateData) => {
     console.log('Service created by Prisma. Checking result...');
     console.log('Service ID:', newService.id);
     console.log('Service videoUrl field:', (newService as any).videoUrl);
+
+    // Generate and update embeddings for the newly created service
+    try {
+      console.log('Generating embeddings for service:', newService.id);
+      const embeddings = await embeddingService.generateServiceEmbeddings({
+        title: newService.title,
+        description: newService.description,
+        tags: newService.tags
+      });
+
+      // Update service with embeddings using raw query
+      await prisma.$executeRaw`
+        UPDATE "Service" 
+        SET 
+          "titleEmbedding" = ${`[${embeddings.titleEmbedding.join(',')}]`}::vector,
+          "descriptionEmbedding" = ${`[${embeddings.descriptionEmbedding.join(',')}]`}::vector,
+          "tagsEmbedding" = ${`[${embeddings.tagsEmbedding.join(',')}]`}::vector,
+          "combinedEmbedding" = ${`[${embeddings.combinedEmbedding.join(',')}]`}::vector,
+          "embeddingUpdatedAt" = NOW()
+        WHERE id = ${newService.id}
+      `;
+
+      console.log('✅ Embeddings generated and stored for service:', newService.id);
+    } catch (embeddingError) {
+      console.warn('⚠️ Failed to generate embeddings for service:', newService.id, embeddingError);
+      // Don't fail the service creation if embedding generation fails
+    }
 
     return newService;
   } catch (error) {
@@ -290,6 +318,13 @@ export const updateService = async (serviceId: string, updateData: Partial<Servi
       throw new Error('Service not found');
     }
 
+    // Check if content that affects embeddings has changed
+    const contentChanged = (
+      (updateData.title !== undefined && updateData.title !== service.title) ||
+      (updateData.description !== undefined && updateData.description !== service.description) ||
+      (updateData.tags !== undefined && JSON.stringify(updateData.tags) !== JSON.stringify(service.tags))
+    );
+
     const updatedService = await prisma.service.update({
       where: { id: serviceId },
       data: updateData,
@@ -308,6 +343,35 @@ export const updateService = async (serviceId: string, updateData: Partial<Servi
         category: true
       }
     });
+
+    // Regenerate embeddings if content changed
+    if (contentChanged) {
+      try {
+        console.log('Content changed, regenerating embeddings for service:', serviceId);
+        const embeddings = await embeddingService.generateServiceEmbeddings({
+          title: updatedService.title,
+          description: updatedService.description,
+          tags: updatedService.tags
+        });
+
+        // Update service with new embeddings using raw query
+        await prisma.$executeRaw`
+          UPDATE "Service" 
+          SET 
+            "titleEmbedding" = ${`[${embeddings.titleEmbedding.join(',')}]`}::vector,
+            "descriptionEmbedding" = ${`[${embeddings.descriptionEmbedding.join(',')}]`}::vector,
+            "tagsEmbedding" = ${`[${embeddings.tagsEmbedding.join(',')}]`}::vector,
+            "combinedEmbedding" = ${`[${embeddings.combinedEmbedding.join(',')}]`}::vector,
+            "embeddingUpdatedAt" = NOW()
+          WHERE id = ${serviceId}
+        `;
+
+        console.log('✅ Embeddings regenerated for updated service:', serviceId);
+      } catch (embeddingError) {
+        console.warn('⚠️ Failed to regenerate embeddings for service:', serviceId, embeddingError);
+        // Don't fail the service update if embedding generation fails
+      }
+    }
 
     return updatedService;
   } catch (error) {
