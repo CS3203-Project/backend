@@ -198,6 +198,197 @@ export const getServiceByConversationId = async (req: Request, res: Response, ne
 };
 
 /**
+ * Hybrid search for services (combines semantic search with geolocation)
+ */
+export const hybridSearchServices = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { 
+      query, 
+      limit = 20,
+      threshold = 0.3,
+      categoryId, 
+      providerId, 
+      minPrice, 
+      maxPrice,
+      // Location parameters
+      lat,
+      lng,
+      latitude,
+      longitude, 
+      address,
+      radius = 50, // Default 50km radius
+      includeWithoutLocation = true
+    } = req.query;
+
+    // Determine user coordinates
+    let userLat: number | undefined, userLng: number | undefined;
+    let locationProvided = false;
+
+    if (lat && lng) {
+      userLat = parseFloat(lat as string);
+      userLng = parseFloat(lng as string);
+      locationProvided = true;
+    } else if (latitude && longitude) {
+      userLat = parseFloat(latitude as string);
+      userLng = parseFloat(longitude as string);
+      locationProvided = true;
+    } else if (address) {
+      try {
+        const locationData = await googleMapsService.geocodeAddress(address as string);
+        userLat = locationData.lat;
+        userLng = locationData.lng;
+        locationProvided = true;
+      } catch (error) {
+        console.warn('Geocoding failed for address:', address, error);
+        // Continue without location filtering
+      }
+    }
+
+    let results: any[] = [];
+    let searchType = '';
+
+    // Case 1: Both query and location provided - Semantic search with location filtering
+    if (query && typeof query === 'string' && query.trim() && locationProvided && userLat && userLng) {
+      console.log('Hybrid search: semantic + location');
+      searchType = 'hybrid';
+      
+      // First get semantic search results
+      const semanticResults = await semanticSearchService.searchServices({
+        query: query as string,
+        limit: parseInt(limit as string) * 2, // Get more results to filter by location
+        threshold: parseFloat(threshold as string),
+        categoryId: categoryId as string,
+        providerId: providerId as string,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+      });
+
+      // Then filter by location and add distance
+      const locationFilteredResults = [];
+      
+      for (const service of semanticResults) {
+        // Get full service data with location
+        const fullService = await serviceService.getServiceById(service.id);
+        
+        if (fullService && fullService.latitude && fullService.longitude) {
+          // Calculate distance
+          const distance = googleMapsService.calculateDistance(
+            userLat!, 
+            userLng!, 
+            fullService.latitude, 
+            fullService.longitude
+          );
+          
+          // Check if within radius
+          if (distance <= parseFloat(radius as string)) {
+            locationFilteredResults.push({
+              ...service,
+              latitude: fullService.latitude,
+              longitude: fullService.longitude,
+              address: fullService.address,
+              city: fullService.city,
+              state: fullService.state,
+              country: fullService.country,
+              postalCode: fullService.postalCode,
+              serviceRadiusKm: fullService.serviceRadiusKm,
+              distance_km: distance
+            });
+          }
+        } else if (includeWithoutLocation === 'true' || includeWithoutLocation === true) {
+          // Include services without location (available everywhere)
+          locationFilteredResults.push({
+            ...service,
+            distance_km: null // No distance for services without location
+          });
+        }
+      }
+
+      // Sort by similarity first, then by distance
+      results = locationFilteredResults
+        .sort((a, b) => {
+          if (a.similarity !== b.similarity) {
+            return b.similarity - a.similarity; // Higher similarity first
+          }
+          if (a.distance_km !== null && b.distance_km !== null) {
+            return a.distance_km - b.distance_km; // Closer distance first
+          }
+          if (a.distance_km === null) return 1; // Services without location go last
+          if (b.distance_km === null) return -1;
+          return 0;
+        })
+        .slice(0, parseInt(limit as string));
+    }
+    
+    // Case 2: Only query provided - Pure semantic search
+    else if (query && typeof query === 'string' && query.trim()) {
+      console.log('Semantic search only');
+      searchType = 'semantic';
+      
+      results = await semanticSearchService.searchServices({
+        query: query as string,
+        limit: parseInt(limit as string),
+        threshold: parseFloat(threshold as string),
+        categoryId: categoryId as string,
+        providerId: providerId as string,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+      });
+    }
+    
+    // Case 3: Only location provided - Location-based search
+    else if (locationProvided && userLat && userLng) {
+      console.log('Location search only');
+      searchType = 'location';
+      
+      const locationSearchOptions = {
+        latitude: userLat,
+        longitude: userLng,
+        radius: parseFloat(radius as string),
+        page: 1,
+        limit: parseInt(limit as string),
+        categoryId: categoryId as string,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
+      };
+
+      const locationResults = await serviceService.searchServicesByLocation(locationSearchOptions);
+      results = locationResults.services;
+    }
+    
+    // Case 4: No query and no location - Return general service list
+    else {
+      console.log('General service listing');
+      searchType = 'general';
+      
+      const generalResults = await serviceService.getServices({
+        categoryId: categoryId as string,
+        providerId: providerId as string,
+        isActive: true,
+        skip: 0,
+        take: parseInt(limit as string)
+      });
+      
+      results = generalResults;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Search completed successfully',
+      data: {
+        query: query || null,
+        location: locationProvided ? { latitude: userLat, longitude: userLng, radius } : null,
+        searchType,
+        results: results,
+        count: results.length
+      }
+    });
+  } catch (error) {
+    console.error('Hybrid search error:', error);
+    next(error);
+  }
+};
+
+/**
  * Semantic search for services
  */
 export const searchServices = async (req: Request, res: Response, next: NextFunction) => {

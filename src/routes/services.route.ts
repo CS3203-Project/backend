@@ -7,6 +7,7 @@ import {
   deleteService,
   getServiceByConversationId,
   searchServices,
+  hybridSearchServices,
   getSimilarServices,
   updateServiceEmbeddings,
   updateAllServiceEmbeddings,
@@ -39,6 +40,13 @@ const router: import('express').Router = Router();
  * @access  Private (Service Provider only)
  */
 router.post('/', validate(createServiceSchema), createService);
+
+/**
+ * @route   GET /api/services/search/hybrid
+ * @desc    Hybrid search for services (semantic + location)
+ * @access  Public
+ */
+router.get('/search/hybrid', hybridSearchServices);
 
 /**
  * @route   GET /api/services/search
