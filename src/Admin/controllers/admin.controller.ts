@@ -272,6 +272,26 @@ export class AdminController {
     }
   }
 
+  async getAllCustomers(req: Request, res: Response): Promise<void> {
+    try {
+      const customers = await adminService.getAllCustomers();
+
+      res.status(200).json({
+        success: true,
+        message: 'All customers fetched successfully',
+        data: customers,
+        count: customers.length,
+      });
+    } catch (error: any) {
+      console.error('Get all customers error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message,
+      });
+    }
+  }
+
   async getAllServicesWithCategories(req: Request, res: Response): Promise<void> {
     try {
       const services = await adminService.getAllServicesWithCategories();

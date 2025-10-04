@@ -16,6 +16,7 @@ router.get('/all', adminAuthMiddleware, adminController.getAllAdmins);
 router.get('/service-providers', adminAuthMiddleware, adminController.getAllServiceProviders);
 router.get('/services', adminAuthMiddleware, adminController.getAllServicesWithCategories);
 router.get('/customers/count', adminAuthMiddleware, adminController.getCustomerCount);
+router.get('/customers', adminAuthMiddleware, adminController.getAllCustomers);
 router.put('/service-providers/:providerId/verification', adminAuthMiddleware, validateServiceProviderVerification, adminController.updateServiceProviderVerification);
 
 export default router;

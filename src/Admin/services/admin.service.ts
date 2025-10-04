@@ -269,6 +269,44 @@ export class AdminService {
     return customerCount;
   }
 
+  async getAllCustomers() {
+    const customers = await prisma.user.findMany({
+      where: {
+        role: 'USER',
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        imageUrl: true,
+        location: true,
+        address: true,
+        isEmailVerified: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLoginAt: true,
+        socialmedia: true,
+        _count: {
+          select: {
+            payments: true,
+            schedules: true,
+            customerReviewsWritten: true,
+            customerReviewsReceived: true,
+            writtenServiceReviews: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return customers;
+  }
+
   async getAllServicesWithCategories() {
     const services = await prisma.service.findMany({
       include: {
