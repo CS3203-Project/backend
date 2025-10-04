@@ -1,5 +1,5 @@
-import { prisma } from '../utils/database.js';
-import { hashPassword, comparePassword } from '../utils/hash.js';
+import { prisma } from '../../utils/database.js';
+import { hashPassword, comparePassword } from '../../utils/hash.js';
 import type { Admin } from '@prisma/client';
 
 export interface CreateAdminData {

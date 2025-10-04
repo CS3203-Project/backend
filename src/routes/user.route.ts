@@ -4,7 +4,7 @@ import { createUser,loginUser,getUserProfile,updateUserProfile,deleteUserProfile
 import validate from '../middlewares/validation.middleware.js';
 import { registerSchema,loginSchema,updateProfileSchema } from '../validators/user.validator.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
-import { adminAuthMiddleware } from '../middlewares/admin.middleware.js';
+import { adminAuthMiddleware } from '../Admin/middlewares/admin.middleware.js';
 import { upload, uploadVideo } from '../utils/s3.js';
 
 router.get('/check-email', checkEmailExistsController);

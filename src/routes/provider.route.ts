@@ -12,7 +12,7 @@ import {
 import validate from '../middlewares/validation.middleware.js';
 import { createProviderSchema, updateProviderSchema, providerParamsSchema } from '../validators/provider.validator.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
-import { adminAuthMiddleware } from '../middlewares/admin.middleware.js';
+import { adminAuthMiddleware } from '../Admin/middlewares/admin.middleware.js';
 
 router.post('/', authMiddleware, validate(createProviderSchema), createProvider);
 router.get('/profile', authMiddleware, getProviderProfile);
