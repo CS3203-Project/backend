@@ -1,6 +1,7 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { prisma } from './database';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -49,6 +50,9 @@ class SocketService {
 
         // Join user to their personal room
         socket.join(`user:${socket.userId}`);
+
+        // Join user to their team rooms
+        this.joinUserTeams(socket);
       }
 
       socket.on('disconnect', () => {
@@ -67,20 +71,136 @@ class SocketService {
         }
       });
 
-      // Handle service-related messages
-      socket.on('service-inquiry', (data: { serviceId: string, message: string }) => {
-        // Emit to service provider
-        socket.to(`service:${data.serviceId}`).emit('new-inquiry', data);
+      // Handle joining specific rooms
+      socket.on('join-team', (teamId: string) => {
+        if (socket.userId) {
+          this.joinTeamRoom(socket, teamId);
+        }
       });
 
-      socket.on('join-service', (serviceId: string) => {
-        socket.join(`service:${serviceId}`);
+      socket.on('leave-team', (teamId: string) => {
+        socket.leave(`team:${teamId}`);
       });
 
-      socket.on('leave-service', (serviceId: string) => {
-        socket.leave(`service:${serviceId}`);
+      // Handle activity requests
+      socket.on('request-activities', async (filters: any) => {
+        if (socket.userId) {
+          try {
+            const activities = await this.getActivitiesForUser(socket.userId, filters);
+            socket.emit('activities', activities);
+          } catch (error) {
+            socket.emit('error', { message: 'Failed to fetch activities' });
+          }
+        }
       });
     });
+  }
+
+  private async joinUserTeams(socket: AuthenticatedSocket) {
+    if (!socket.userId) return;
+
+    try {
+      const teams = await prisma.teamMember.findMany({
+        where: { userId: socket.userId },
+        select: { teamId: true }
+      });
+
+      teams.forEach(team => {
+        socket.join(`team:${team.teamId}`);
+      });
+    } catch (error) {
+      console.error('Error joining user teams:', error);
+    }
+  }
+
+  private async joinTeamRoom(socket: AuthenticatedSocket, teamId: string) {
+    if (!socket.userId) return;
+
+    try {
+      // Verify user is member of the team
+      const membership = await prisma.teamMember.findFirst({
+        where: {
+          userId: socket.userId,
+          teamId
+        }
+      });
+
+      if (membership) {
+        socket.join(`team:${teamId}`);
+        socket.emit('joined-team', teamId);
+      } else {
+        socket.emit('error', { message: 'Access denied to team' });
+      }
+    } catch (error) {
+      socket.emit('error', { message: 'Failed to join team' });
+    }
+  }
+
+  private async getActivitiesForUser(userId: string, filters: any = {}) {
+    const { teamId, entityType, limit = 50 } = filters;
+    
+    const where: any = {};
+    
+    if (teamId) {
+      where.teamId = teamId;
+    } else {
+      // Get activities for tasks/teams user is involved in
+      const userTeamIds = await this.getUserTeamIds(userId);
+      
+      where.OR = [
+        { userId },
+        { teamId: { in: userTeamIds } },
+        {
+          AND: [
+            { entityType: 'TASK' },
+            {
+              task: {
+                OR: [
+                  { createdById: userId },
+                  { assignments: { some: { userId } } },
+                  { team: { members: { some: { userId } } } }
+                ]
+              }
+            }
+          ]
+        }
+      ];
+    }
+    
+    if (entityType) {
+      where.entityType = entityType;
+    }
+
+    return await prisma.activity.findMany({
+      where,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        team: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+  }
+
+  private async getUserTeamIds(userId: string): Promise<string[]> {
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId },
+      select: { teamId: true }
+    });
+    
+    return memberships.map(m => m.teamId);
   }
 
   // Public methods for emitting events
@@ -88,28 +208,69 @@ class SocketService {
     this.io.to(`user:${userId}`).emit(event, data);
   }
 
-  public emitToService(serviceId: string, event: string, data: any) {
-    this.io.to(`service:${serviceId}`).emit(event, data);
+  public emitToTeam(teamId: string, event: string, data: any) {
+    this.io.to(`team:${teamId}`).emit(event, data);
   }
 
   public emitToAll(event: string, data: any) {
     this.io.emit(event, data);
   }
 
-  // Service-related broadcasting methods
-  public broadcastServiceUpdate(service: any) {
-    if (service.id) {
-      this.emitToService(service.id, 'service-updated', service);
+  // Activity broadcasting methods
+  public broadcastActivity(activity: any) {
+    // Emit to the user who created the activity
+    if (activity.userId) {
+      this.emitToUser(activity.userId, 'new-activity', activity);
+    }
+
+    // Emit to team members if it's a team activity
+    if (activity.teamId) {
+      this.emitToTeam(activity.teamId, 'new-activity', activity);
+    }
+
+    // For task activities, emit to task assignees and team members
+    if (activity.entityType === 'TASK' && activity.task) {
+      // This could be enhanced to get task assignees and emit to them specifically
+      if (activity.teamId) {
+        this.emitToTeam(activity.teamId, 'new-activity', activity);
+      }
     }
   }
 
-  public broadcastBookingUpdate(booking: any) {
-    // Emit to both customer and provider
-    if (booking.userId) {
-      this.emitToUser(booking.userId, 'booking-updated', booking);
+  public broadcastTaskUpdate(task: any) {
+    // Emit to task creator
+    if (task.createdById) {
+      this.emitToUser(task.createdById, 'task-updated', task);
     }
-    if (booking.providerId) {
-      this.emitToUser(booking.providerId, 'booking-updated', booking);
+
+    // Emit to task assignees
+    if (task.assignments) {
+      task.assignments.forEach((assignment: any) => {
+        this.emitToUser(assignment.userId, 'task-updated', task);
+      });
+    }
+
+    // Emit to team members
+    if (task.teamId) {
+      this.emitToTeam(task.teamId, 'task-updated', task);
+    }
+  }
+
+  public broadcastTeamUpdate(team: any) {
+    if (team.id) {
+      this.emitToTeam(team.id, 'team-updated', team);
+    }
+  }
+
+  public broadcastCommentAdded(comment: any) {
+    // Emit to task creator
+    if (comment.task && comment.task.createdById) {
+      this.emitToUser(comment.task.createdById, 'comment-added', comment);
+    }
+
+    // Emit to team members if task has a team
+    if (comment.task && comment.task.teamId) {
+      this.emitToTeam(comment.task.teamId, 'comment-added', comment);
     }
   }
 

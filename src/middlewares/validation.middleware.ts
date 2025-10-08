@@ -5,7 +5,7 @@ import type { Request, Response, NextFunction } from 'express';
  * @param {Object} schema - Joi validation schema
  * @param {string} source - Source to validate: 'body', 'query', 'params' (default: 'body')
  */
-export default (schema: any, source = 'body') => (req: Request, res: Response, next: NextFunction) => {
+export default (schema: any, source = 'body') => (req: Request, res: Response, next: NextFunction): void => {
   console.log(`=== Validation Middleware (${source}) ===`);
   
   let dataToValidate;
@@ -34,14 +34,15 @@ export default (schema: any, source = 'body') => (req: Request, res: Response, n
     console.log('Validation Error:', error.details[0].message);
     console.log('Full error details:', error.details);
     
-    return res.status(400).json({ 
+    res.status(400).json({ 
       success: false,
-      message: 'Validation failed',
+      message: error.details[0].message,
       errors: error.details.map((detail: any) => ({
         field: detail.path.join('.'),
         message: detail.message
       }))
     });
+    return;
   }
   
   // Replace the validated data with the sanitized version
