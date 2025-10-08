@@ -54,7 +54,7 @@ model ServiceProvider {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   IDCardUrl      String
-  isVerified     Boolean    @default(true)
+  isVerified     Boolean    @default(false)
   companies      Company[]
   payments       Payment[]
   schedules      Schedule[]
