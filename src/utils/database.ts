@@ -1,20 +1,45 @@
 import { PrismaClient } from '@prisma/client';
 
-export const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-});
+// Singleton Prisma client to prevent multiple instances
+class DatabaseManager {
+  private static instance: PrismaClient;
 
-// Graceful shutdown
-process.on('beforeExit', async () => {
-  await prisma.$disconnect();
-});
+  static getInstance() {
+    if (!DatabaseManager.instance) {
+      DatabaseManager.instance = new PrismaClient({
+        log: ['warn', 'error'],
+        datasources: {
+          db: {
+            url: process.env.DATABASE_URL,
+          },
+        },
+      });
 
-process.on('SIGINT', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
+      // Handle graceful shutdown
+      process.on('beforeExit', async () => {
+        await DatabaseManager.instance.$disconnect();
+      });
 
-process.on('SIGTERM', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
+      process.on('SIGINT', async () => {
+        await DatabaseManager.instance.$disconnect();
+        process.exit(0);
+      });
+
+      process.on('SIGTERM', async () => {
+        await DatabaseManager.instance.$disconnect();
+        process.exit(0);
+      });
+    }
+
+    return DatabaseManager.instance;
+  }
+
+  static async disconnect() {
+    if (DatabaseManager.instance) {
+      await DatabaseManager.instance.$disconnect();
+    }
+  }
+}
+
+// Export the singleton instance
+export const prisma = DatabaseManager.getInstance();
