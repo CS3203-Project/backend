@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -15,11 +13,15 @@ model User {
   id                    String           @id @default(cuid())
   email                 String           @unique
   password              String
+  role                  String           @default("USER")
+  isActive              Boolean          @default(true)
   firstName             String?
   lastName              String?
   phone                 String?
+  imageUrl              String?
+  location              String?
   address               String?
-  bio                   String?
+  isEmailVerified       Boolean          @default(false)
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   lastLoginAt           DateTime?
@@ -35,38 +37,57 @@ model User {
   writtenServiceReviews ServiceReview[] @relation("writtenServiceReviews")
 
   @@index([email])
+  @@index([role])
+  @@index([isActive])
   @@index([createdAt])
 }
 
-model Team {
-  id                    String           @id @default(cuid())
-  name                  String
-  description           String?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  
-  // Relationships
-  members               TeamMember[]
-  tasks                 Task[]
-  activities            Activity[]
-  
-  @@index([createdAt])
-}
+model ServiceProvider {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  bio            String?
+  skills         String[]
+  qualifications String[]
+  logoUrl        String?
+  averageRating  Float?
+  totalReviews   Int?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  IDCardUrl      String
+  isVerified     Boolean    @default(true)
+  companies      Company[]
+  payments       Payment[]
+  schedules      Schedule[]
+  services       Service[]
+  user           User       @relation(fields: [userId], references: [id])
 
-model TeamMember {
-  id                    String           @id @default(cuid())
-  userId                String
-  teamId                String
-  role                  TeamRole         @default(MEMBER)
-  joinedAt              DateTime         @default(now())
-  
-  // Relationships
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  team                  Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, teamId])
   @@index([userId])
-  @@index([teamId])
+  @@index([isVerified])
+  @@index([averageRating])
+  @@index([createdAt])
+}
+
+model Company {
+  id          String          @id @default(cuid())
+  providerId  String
+  name        String?
+  description String?
+  logo        String?
+  address     String?
+  contact     String?
+  socialmedia String[]
+  provider    ServiceProvider @relation(fields: [providerId], references: [id])
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String?
+  slug        String     @unique
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  services    Service[]
 }
 
 model Service {
@@ -119,52 +140,53 @@ model Service {
   @@index([state])
 }
 
-model TaskAssignment {
-  id                    String           @id @default(cuid())
-  taskId                String
-  userId                String
-  assignedAt            DateTime         @default(now())
-  assignedById          String?
-  
-  // Relationships
-  task                  Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([taskId, userId])
-  @@index([taskId])
-  @@index([userId])
+model Schedule {
+  id                   String          @id @default(cuid())
+  serviceId            String
+  providerId           String
+  userId               String
+  startTime            String
+  endTime              String
+  customerConfirmation Boolean         @default(false)
+  providerConfirmation Boolean         @default(false)
+  serviceFee           Decimal?        @db.Decimal(10, 2)
+  currency             String          @default("RS")
+  queueValue           Int?
+  provider             ServiceProvider @relation(fields: [providerId], references: [id])
+  service              Service         @relation(fields: [serviceId], references: [id])
+  user                 User            @relation(fields: [userId], references: [id])
 }
 
-model TaskDependency {
-  id                    String           @id @default(cuid())
-  taskId                String           // The task that depends on another
-  dependsOnTaskId       String           // The task it depends on
-  createdAt             DateTime         @default(now())
-  
-  // Relationships
-  task                  Task             @relation("DependentTask", fields: [taskId], references: [id], onDelete: Cascade)
-  dependsOnTask         Task             @relation("DependencyTask", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
-  
-  @@unique([taskId, dependsOnTaskId])
-  @@index([taskId])
-  @@index([dependsOnTaskId])
+model Payment {
+  id            String          @id @default(cuid())
+  serviceId     String
+  providerId    String
+  userId        String
+  gateway       String?
+  chargeId      String          @unique
+  amount        Decimal         @db.Decimal(10, 2)
+  currency      String
+  status        String?
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  failureReason String?
+  createdAt     DateTime        @default(now())
+  provider      ServiceProvider @relation(fields: [providerId], references: [id])
+  service       Service         @relation(fields: [serviceId], references: [id])
+  user          User            @relation(fields: [userId], references: [id])
 }
 
-model Comment {
-  id                    String           @id @default(cuid())
-  content               String
-  taskId                String
-  userId                String
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  
-  // Relationships
-  task                  Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([taskId])
-  @@index([userId])
-  @@index([createdAt])
+
+model ServiceReview {
+  id         String   @id @default(cuid())
+  reviewerId String
+  serviceId  String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  reviewer   User     @relation("writtenServiceReviews", fields: [reviewerId], references: [id])
+  service    Service  @relation(fields: [serviceId], references: [id])
 }
 
 model Notification {
