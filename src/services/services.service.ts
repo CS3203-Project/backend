@@ -104,25 +104,25 @@ export const createService = async (serviceData: ServiceCreateData) => {
     const createData = {
       providerId,
       categoryId,
-      title,
-      description,
+      title: title ?? null,
+      description: description ?? null,
       price,
       currency,
       tags,
       images,
       isActive,
       workingTime,
-      videoUrl, // Make sure videoUrl is included
+      videoUrl: videoUrl ?? null, // Ensure videoUrl is null if undefined
       // Location fields
-      latitude: serviceData.latitude,
-      longitude: serviceData.longitude,
-      address: serviceData.address,
-      city: serviceData.city,
-      state: serviceData.state,
-      country: serviceData.country,
-      postalCode: serviceData.postalCode,
-      serviceRadiusKm: serviceData.serviceRadiusKm,
-      locationLastUpdated: serviceData.locationLastUpdated
+      latitude: serviceData.latitude ?? null,
+      longitude: serviceData.longitude ?? null,
+      address: serviceData.address ?? null,
+      city: serviceData.city ?? null,
+      state: serviceData.state ?? null,
+      country: serviceData.country ?? null,
+      postalCode: serviceData.postalCode ?? null,
+      serviceRadiusKm: serviceData.serviceRadiusKm ?? null,
+      locationLastUpdated: serviceData.locationLastUpdated ?? null
     };
 
     console.log('Data being sent to Prisma create:', JSON.stringify(createData, null, 2));
@@ -155,8 +155,8 @@ export const createService = async (serviceData: ServiceCreateData) => {
     try {
       console.log('Generating embeddings for service:', newService.id);
       const embeddings = await embeddingService.generateServiceEmbeddings({
-        title: newService.title,
-        description: newService.description,
+        title: newService.title ?? "",
+        description: newService.description ?? "",
         tags: newService.tags
       });
 
@@ -182,7 +182,10 @@ export const createService = async (serviceData: ServiceCreateData) => {
   } catch (error) {
     console.error('=== SERVICE SERVICE ERROR ===');
     console.error('Error in createService:', error);
-    throw new Error(`Failed to create service: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to create service: ${errorMessage}`);
   }
 };
 
@@ -248,7 +251,10 @@ export const getServices = async (filters: ServiceFilters = {}) => {
 
     return services;
   } catch (error) {
-    throw new Error(`Failed to fetch services: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to fetch services: ${errorMessage}`);
   }
 };
 
@@ -298,7 +304,10 @@ export const getServiceById = async (serviceId: string) => {
 
     return service;
   } catch (error) {
-    throw new Error(`Failed to fetch service: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to fetch service: ${errorMessage}`);
   }
 };
 
@@ -349,8 +358,8 @@ export const updateService = async (serviceId: string, updateData: Partial<Servi
       try {
         console.log('Content changed, regenerating embeddings for service:', serviceId);
         const embeddings = await embeddingService.generateServiceEmbeddings({
-          title: updatedService.title,
-          description: updatedService.description,
+          title: updatedService.title ?? "",
+          description: updatedService.description ?? "",
           tags: updatedService.tags
         });
 
@@ -375,7 +384,10 @@ export const updateService = async (serviceId: string, updateData: Partial<Servi
 
     return updatedService;
   } catch (error) {
-    throw new Error(`Failed to update service: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to update service: ${errorMessage}`);
   }
 };
 
@@ -400,7 +412,10 @@ export const deleteService = async (serviceId: string) => {
 
     return deletedService;
   } catch (error) {
-    throw new Error(`Failed to delete service: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to delete service: ${errorMessage}`);
   }
 };
 
@@ -454,7 +469,10 @@ export const getServiceByConversationId = async (conversationId: string) => {
 
     return conversation.service;
   } catch (error) {
-    throw new Error(`Failed to fetch service by conversation ID: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to fetch service by conversation ID: ${errorMessage}`);
   }
 };
 
@@ -603,6 +621,9 @@ export const searchServicesByLocation = async (options: LocationSearchOptions) =
     };
   } catch (error) {
     console.error('Location search error:', error);
-    throw new Error(`Failed to search services by location: ${error.message}`);
+    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+      ? (error as { message: string }).message
+      : String(error);
+    throw new Error(`Failed to search services by location: ${errorMessage}`);
   }
 };

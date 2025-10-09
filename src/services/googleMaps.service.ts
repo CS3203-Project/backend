@@ -55,11 +55,14 @@ class GoogleMapsService {
         },
       });
 
-      if (response.data.results.length === 0) {
+      if (response.data.results.length === 0 || !response.data.results[0]) {
         throw new Error('Address not found');
       }
 
       const result = response.data.results[0];
+      if (!result || !result.geometry || !result.geometry.location || !result.address_components) {
+        throw new Error('Invalid geocoding response structure');
+      }
       const location = result.geometry.location;
       const components = result.address_components;
 
@@ -110,6 +113,9 @@ class GoogleMapsService {
       }
 
       const result = response.data.results[0];
+      if (!result || !result.address_components) {
+        throw new Error('Invalid reverse geocoding response structure');
+      }
       const components = result.address_components;
 
       const locationData: LocationData = {

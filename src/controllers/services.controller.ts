@@ -253,15 +253,20 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
       searchType = 'hybrid';
       
       // First get semantic search results
-      const semanticResults = await semanticSearchService.searchServices({
+      const semanticSearchOptions: any = {
         query: query as string,
         limit: parseInt(limit as string) * 2, // Get more results to filter by location
         threshold: parseFloat(threshold as string),
         categoryId: categoryId as string,
         providerId: providerId as string,
-        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
-      });
+      };
+      if (minPrice) {
+        semanticSearchOptions.minPrice = parseFloat(minPrice as string);
+      }
+      if (maxPrice) {
+        semanticSearchOptions.maxPrice = parseFloat(maxPrice as string);
+      }
+      const semanticResults = await semanticSearchService.searchServices(semanticSearchOptions);
 
       // Then filter by location and add distance
       const locationFilteredResults = [];
@@ -324,15 +329,20 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
       console.log('Semantic search only');
       searchType = 'semantic';
       
-      results = await semanticSearchService.searchServices({
+      const searchOptions: any = {
         query: query as string,
         limit: parseInt(limit as string),
         threshold: parseFloat(threshold as string),
         categoryId: categoryId as string,
         providerId: providerId as string,
-        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
-      });
+      };
+      if (minPrice) {
+        searchOptions.minPrice = parseFloat(minPrice as string);
+      }
+      if (maxPrice) {
+        searchOptions.maxPrice = parseFloat(maxPrice as string);
+      }
+      results = await semanticSearchService.searchServices(searchOptions);
     }
     
     // Case 3: Only location provided - Location-based search
@@ -340,16 +350,20 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
       console.log('Location search only');
       searchType = 'location';
       
-      const locationSearchOptions = {
+      const locationSearchOptions: any = {
         latitude: userLat,
         longitude: userLng,
         radius: parseFloat(radius as string),
         page: 1,
         limit: parseInt(limit as string),
-        categoryId: categoryId as string,
-        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
+        categoryId: categoryId as string
       };
+      if (minPrice) {
+        locationSearchOptions.minPrice = parseFloat(minPrice as string);
+      }
+      if (maxPrice) {
+        locationSearchOptions.maxPrice = parseFloat(maxPrice as string);
+      }
 
       const locationResults = await serviceService.searchServicesByLocation(locationSearchOptions);
       results = locationResults.services;
@@ -402,15 +416,19 @@ export const searchServices = async (req: Request, res: Response, next: NextFunc
       });
     }
 
-    const searchOptions = {
+    const searchOptions: any = {
       query: query as string,
       limit: limit ? parseInt(limit as string) : 20,
       threshold: threshold ? parseFloat(threshold as string) : 0.7,
       categoryId: categoryId as string,
       providerId: providerId as string,
-      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
     };
+    if (minPrice) {
+      searchOptions.minPrice = parseFloat(minPrice as string);
+    }
+    if (maxPrice) {
+      searchOptions.maxPrice = parseFloat(maxPrice as string);
+    }
 
     const results = await semanticSearchService.searchServices(searchOptions);
 
@@ -540,16 +558,20 @@ export const searchServicesByLocation = async (req: Request, res: Response, next
       });
     }
 
-    const searchOptions = {
+    const searchOptions: any = {
       latitude: userLat,
       longitude: userLng,
       radius: parseFloat(radius as string),
       page: parseInt(page as string),
       limit: parseInt(limit as string),
-      categoryId: categoryId as string,
-      minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
-      maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined
+      categoryId: categoryId as string
     };
+    if (minPrice) {
+      searchOptions.minPrice = parseFloat(minPrice as string);
+    }
+    if (maxPrice) {
+      searchOptions.maxPrice = parseFloat(maxPrice as string);
+    }
 
     const results = await serviceService.searchServicesByLocation(searchOptions);
 
