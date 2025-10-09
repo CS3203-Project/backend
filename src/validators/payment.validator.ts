@@ -10,7 +10,7 @@ export const validatePaymentIntent = (req: any, res: any, next: any) => {
       'number.positive': 'Amount must be a positive number',
       'any.required': 'Amount is required',
     }),
-    currency: Joi.string().length(3).default('usd').messages({
+    currency: Joi.string().length(3).default('lkr').messages({
       'string.length': 'Currency must be a 3-character code',
     }),
   });

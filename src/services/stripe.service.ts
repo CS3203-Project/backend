@@ -27,7 +27,7 @@ class StripeService {
     providerId: string,
     userId: string,
     amount: number,
-    currency: string = 'usd'
+    currency: string = 'lkr'
   ) {
     try {
       // Calculate platform fee (5% platform fee, 95% to provider)
@@ -275,6 +275,7 @@ class StripeService {
             availableBalance: 0,
             pendingBalance: 0,
             totalWithdrawn: 0,
+            currency: 'lkr',
           },
         });
       }

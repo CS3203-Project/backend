@@ -192,7 +192,7 @@ model ProviderEarnings {
   availableBalance  Decimal  @db.Decimal(10, 2) @default(0)
   pendingBalance    Decimal  @db.Decimal(10, 2) @default(0)
   totalWithdrawn    Decimal  @db.Decimal(10, 2) @default(0)
-  currency          String   @default("usd")
+  currency          String   @default("lkr")
   stripeAccountId   String?  @unique
   lastPayoutAt      DateTime?
   createdAt         DateTime @default(now())

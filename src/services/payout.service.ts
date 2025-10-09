@@ -141,7 +141,7 @@ class PayoutService {
   /**
    * Create a payout to provider's bank account
    */
-  async createPayout(providerId: string, amount: number, currency: string = 'usd') {
+  async createPayout(providerId: string, amount: number, currency: string = 'lkr') {
     try {
       const earnings = await prisma.providerEarnings.findUnique({
         where: { providerId },

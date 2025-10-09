@@ -10,7 +10,7 @@ export class PaymentController {
    */
   async createPaymentIntent(req: Request, res: Response) {
     try {
-      const { serviceId, amount, currency = 'usd' } = req.body;
+      const { serviceId, amount, currency = 'lkr' } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -150,9 +150,27 @@ export class PaymentController {
 
       const skip = (Number(page) - 1) * Number(limit);
 
+      // Check if user is a service provider
+      const serviceProvider = await prisma.serviceProvider.findUnique({
+        where: { userId },
+      });
+
+      // Build where clause based on user type
+      const whereClause = serviceProvider 
+        ? {
+            // For providers: show payments for their services
+            provider: {
+              userId: userId,
+            },
+          }
+        : {
+            // For customers: show their payments
+            userId,
+          };
+
       const [payments, total] = await Promise.all([
         prisma.payment.findMany({
-          where: { userId },
+          where: whereClause,
           include: {
             service: {
               select: {
@@ -172,13 +190,20 @@ export class PaymentController {
                 },
               },
             },
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
           },
           orderBy: { createdAt: 'desc' },
           skip,
           take: Number(limit),
         }),
         prisma.payment.count({
-          where: { userId },
+          where: whereClause,
         }),
       ]);
 
