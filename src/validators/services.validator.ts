@@ -29,7 +29,7 @@ export const createServiceSchema = Joi.object({
     'any.required': 'Price is required'
   }),
   
-  currency: Joi.string().length(3).uppercase().optional().default('USD').messages({
+  currency: Joi.string().length(3).uppercase().optional().default('LKR').messages({
     'string.length': 'Currency must be a 3-character code (e.g., USD, EUR)',
     'string.uppercase': 'Currency must be uppercase'
   }),

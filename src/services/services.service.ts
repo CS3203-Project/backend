@@ -61,7 +61,7 @@ export const createService = async (serviceData: ServiceCreateData) => {
       title,
       description,
       price,
-      currency = "USD",
+      currency = "LKR",
       tags = [],
       images = [],
       isActive = true,
