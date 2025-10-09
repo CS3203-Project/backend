@@ -183,10 +183,10 @@ export class SemanticSearchService {
       await prisma.$executeRaw`
         UPDATE "Service" 
         SET 
-          "titleEmbedding" = ${embeddings.titleEmbedding}::vector,
-          "descriptionEmbedding" = ${embeddings.descriptionEmbedding}::vector,
-          "tagsEmbedding" = ${embeddings.tagsEmbedding}::vector,
-          "combinedEmbedding" = ${embeddings.combinedEmbedding}::vector,
+          "titleEmbedding" = ${`[${embeddings.titleEmbedding.join(',')}]`}::vector,
+          "descriptionEmbedding" = ${`[${embeddings.descriptionEmbedding.join(',')}]`}::vector,
+          "tagsEmbedding" = ${`[${embeddings.tagsEmbedding.join(',')}]`}::vector,
+          "combinedEmbedding" = ${`[${embeddings.combinedEmbedding.join(',')}]`}::vector,
           "embeddingUpdatedAt" = NOW()
         WHERE id = ${serviceId}
       `;
