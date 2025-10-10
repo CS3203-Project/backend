@@ -35,6 +35,7 @@ model User {
   customerReviewsWritten  CustomerReview[] @relation("CustomerReviewReviewer")
   customerReviewsReceived CustomerReview[] @relation("CustomerReviewReviewee")
   writtenServiceReviews   ServiceReview[]  @relation("writtenServiceReviews")
+  serviceRequests         ServiceRequest[]
 
   @@index([email])
   @@index([role])
@@ -88,6 +89,7 @@ model Category {
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   services    Service[]
+  serviceRequests ServiceRequest[]
 }
 
 model Service {
@@ -186,17 +188,17 @@ model Payment {
 }
 
 model ProviderEarnings {
-  id                String   @id @default(cuid())
-  providerId        String   @unique
-  totalEarnings     Decimal  @db.Decimal(10, 2) @default(0)
-  availableBalance  Decimal  @db.Decimal(10, 2) @default(0)
-  pendingBalance    Decimal  @db.Decimal(10, 2) @default(0)
-  totalWithdrawn    Decimal  @db.Decimal(10, 2) @default(0)
-  currency          String   @default("lkr")
-  stripeAccountId   String?  @unique
-  lastPayoutAt      DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String    @id @default(cuid())
+  providerId       String    @unique
+  totalEarnings    Decimal   @default(0) @db.Decimal(10, 2)
+  availableBalance Decimal   @default(0) @db.Decimal(10, 2)
+  pendingBalance   Decimal   @default(0) @db.Decimal(10, 2)
+  totalWithdrawn   Decimal   @default(0) @db.Decimal(10, 2)
+  currency         String    @default("lkr")
+  stripeAccountId  String?   @unique
+  lastPayoutAt     DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@index([providerId])
 }
@@ -291,4 +293,44 @@ enum PaymentStatus {
   CANCELED
   REFUNDED
   PARTIALLY_REFUNDED
+}
+
+enum ServiceRequestStatus {
+  PENDING
+  MATCHED
+  COMPLETED
+  CLOSED
+}
+
+model ServiceRequest {
+  id                   String                 @id @default(uuid())
+  userId               String
+  title                String?
+  description          String
+  categoryId           String?
+  latitude             Float?
+  longitude            Float?
+  address              String?
+  city                 String?
+  state                String?
+  country              String?
+  postalCode           String?
+  locationLastUpdated  DateTime?
+  // Semantic search fields
+  titleEmbedding          Unsupported("vector(768)")?
+  descriptionEmbedding    Unsupported("vector(768)")?
+  combinedEmbedding       Unsupported("vector(768)")?
+  embeddingUpdatedAt      DateTime?
+
+  status                  ServiceRequestStatus @default(PENDING)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime   @updatedAt
+
+  user                    User     @relation(fields: [userId], references: [id])
+  category                Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([userId])
 }
