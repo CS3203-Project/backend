@@ -50,10 +50,11 @@ import companyRoutes from './src/routes/company.route';
 import servicesRoutes from './src/routes/services.route';
 import categoryRoutes from './src/routes/category.route';
 import adminRoutes from './src/Admin/routes/admin.route';
-import confirmationRoutes from './src/routes/confirmation.route'; 
+import confirmationRoutes from './src/routes/confirmation.route';
 import reviewRoutes from './src/routes/review.route';
 import serviceReviewRoutes from './src/routes/serviceReview.route';
 import paymentRoutes from './src/routes/payment.route';
+import notificationRoutes from './src/routes/notification.route';
 import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index';
 
 // Simple database test function
@@ -106,6 +107,7 @@ app.use('/api/confirmations', confirmationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/service-reviews', serviceReviewRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
