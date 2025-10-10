@@ -14,18 +14,50 @@ export interface UpdateServiceReviewData {
 }
 
 export const createServiceReview = async (data: CreateServiceReviewData) => {
-  // Prevent duplicate reviews by same user for same service
+  // Check if review already exists
   const existing = await prisma.serviceReview.findFirst({
     where: { reviewerId: data.reviewerId, serviceId: data.serviceId }
   });
-  if (existing) throw new Error('You have already reviewed this service.');
-  return prisma.serviceReview.create({
-    data,
-    include: {
-      reviewer: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
-      service: { select: { id: true, title: true } }
+
+  if (existing) {
+    // Update existing review (upsert behavior)
+    const updateData: any = {
+      rating: data.rating,
+      updatedAt: new Date(),
+    };
+
+    if (data.comment !== undefined) {
+      updateData.comment = data.comment;
     }
-  });
+
+    return prisma.serviceReview.update({
+      where: { id: existing.id },
+      data: updateData,
+      include: {
+        reviewer: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
+        service: { select: { id: true, title: true } }
+      }
+    });
+  } else {
+    // Create new review
+    const createData: any = {
+      reviewerId: data.reviewerId,
+      serviceId: data.serviceId,
+      rating: data.rating,
+    };
+
+    if (data.comment !== undefined) {
+      createData.comment = data.comment;
+    }
+
+    return prisma.serviceReview.create({
+      data: createData,
+      include: {
+        reviewer: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
+        service: { select: { id: true, title: true } }
+      }
+    });
+  }
 };
 
 export const getServiceReviews = async (serviceId: string, page = 1, limit = 10) => {
