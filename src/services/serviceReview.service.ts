@@ -126,10 +126,10 @@ export const getServiceReviewStats = async (serviceId: string) => {
   }
 
   const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+  const averageRating = reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / totalReviews;
   
   const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  reviews.forEach(review => {
+  reviews.forEach((review: { rating: number }) => {
     ratingDistribution[review.rating as keyof typeof ratingDistribution]++;
   });
 
@@ -176,7 +176,7 @@ export const getServiceReviewsDetailed = async (serviceId: string, page = 1, lim
   ]);
 
   // Transform reviews to match frontend format
-  const transformedReviews = reviews.map(review => ({
+  const transformedReviews = reviews.map((review: any) => ({
     id: review.id,
     rating: review.rating,
     comment: review.comment || '',
@@ -249,7 +249,7 @@ export const getProviderServiceReviews = async (providerId: string, page = 1, li
   ]);
 
   // Transform reviews to match frontend format
-  const transformedReviews = reviews.map(review => ({
+  const transformedReviews = reviews.map((review: any) => ({
     id: review.id,
     rating: review.rating,
     comment: review.comment || '',
@@ -299,10 +299,10 @@ export const getProviderReviewStats = async (providerId: string) => {
   }
 
   const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+  const averageRating = reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / totalReviews;
   
   const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  reviews.forEach(review => {
+  reviews.forEach((review: { rating: number }) => {
     ratingDistribution[review.rating as keyof typeof ratingDistribution]++;
   });
 
