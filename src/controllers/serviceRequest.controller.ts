@@ -6,7 +6,7 @@ import {
   updateServiceRequest as updateRequestService,
   deleteServiceRequest as deleteRequestService,
   findMatchingServices as findMatches,
-  logMatchingServicesForNewRequest
+  sendNotificationsToMatchingProviders
 } from '../services/serviceRequest.service.js';
 
 /**
@@ -62,17 +62,17 @@ export const createServiceRequest = async (req: Request, res: Response) => {
     const newRequest = await createServiceRequestService(requestData);
     console.log('🎯 SERVICE REQUEST CREATED:', newRequest.id); // Debug log
 
-    // Fire-and-forget: Log matching services for the new request (don't wait)
+    // Fire-and-forget: Send notifications to matching providers (don't wait)
     if (newRequest.id) {
-      console.log('🚀 STARTING AUTOMATIC MATCHING LOG...'); // Debug log
-      logMatchingServicesForNewRequest(newRequest.id).then(() => {
-        console.log('✅ LOGGING COMPLETED SUCCESSFULLY');
+      console.log('🚀 STARTING AUTOMATIC MATCHING NOTIFICATIONS...'); // Debug log
+      sendNotificationsToMatchingProviders(newRequest.id).then(() => {
+        console.log('✅ NOTIFICATIONS SENT SUCCESSFULLY');
       }).catch(error => {
-        console.error('❌ LOGGING FAILED:', error);
-        // Don't fail the response if logging fails
+        console.error('❌ NOTIFICATIONS FAILED:', error);
+        // Don't fail the response if notifications fail
       });
     } else {
-      console.log('❌ NO REQUEST ID - LOGGING SKIPPED');
+      console.log('❌ NO REQUEST ID - NOTIFICATIONS SKIPPED');
     }
 
     res.status(201).json({

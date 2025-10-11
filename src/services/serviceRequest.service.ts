@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { embeddingService } from './embedding.service.js';
+import { queueService } from './queue.service.js';
 
 const prisma = new PrismaClient();
 
@@ -319,8 +320,8 @@ export const deleteServiceRequest = async (id: string, userId: string) => {
 };
 
 // New function to log matching services for newly created service requests
-// New function to log matching services for newly created service requests
-export const logMatchingServicesForNewRequest = async (serviceRequestId: string) => {
+// New function to send notifications to provider of matching services for newly created service requests
+export const sendNotificationsToMatchingProviders = async (serviceRequestId: string) => {
   try {
     console.log('='.repeat(80));
     console.log('🎯 AUTOMATIC MATCHING: Finding services for new request');
@@ -385,8 +386,100 @@ export const logMatchingServicesForNewRequest = async (serviceRequestId: string)
       console.log('   ⚠️ No matching services found');
     }
 
+    // Filter services with >60% match and send notifications
+    const highlyMatchingServices = matchesResult.matchingServices.filter(
+      service => (service.similarity as number) > 0.6
+    );
+
+    console.log(`\n📧 HIGHLY MATCHING SERVICES (>60%): ${highlyMatchingServices.length}`);
+    console.log('='.repeat(60));
+
+    if (highlyMatchingServices.length > 0) {
+      let notificationsSent = 0;
+
+      for (const service of highlyMatchingServices) {
+        try {
+          // Get provider information with email
+          const providerInfo = await prisma.serviceProvider.findUnique({
+            where: { id: service.providerId },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true
+                }
+              }
+            }
+          });
+
+          if (!providerInfo?.user?.email) {
+            console.log(`⚠️  No email found for provider ${service.providerId}, skipping notification`);
+            continue;
+          }
+
+          const customerName = `${serviceRequest.user?.firstName || ''} ${serviceRequest.user?.lastName || ''}`.trim() || 'Customer';
+          const providerName = `${providerInfo.user.firstName || ''} ${providerInfo.user.lastName || ''}`.trim() || 'Service Provider';
+          const matchPercentage = Math.round((service.similarity as number) * 100);
+
+          console.log(`📤 Sending notification to: ${providerInfo.user.email} (${providerName})`);
+          console.log(`   Service: "${service.title || 'Untitled'}"`);
+          console.log(`   Match: ${matchPercentage}%`);
+
+          // Send notification using queue service (similar to review notifications)
+          await queueService.sendMessageOrReviewNotification({
+            customerEmail: serviceRequest.user?.email || 'customer@example.com',
+            providerEmail: providerInfo.user.email,
+            customerName: customerName,
+            providerName: providerName,
+            message: `New service request matches your offering "${service.title || 'Untitled'}" with ${matchPercentage}% similarity.
+
+Request Details:
+- Title: ${serviceRequest.title || 'Untitled'}
+- Description: ${serviceRequest.description.substring(0, 200)}${serviceRequest.description.length > 200 ? '...' : ''}
+${serviceRequest.address || serviceRequest.city || serviceRequest.state || serviceRequest.country ?
+`- Location: ${[serviceRequest.address, serviceRequest.city, serviceRequest.state, serviceRequest.country].filter(Boolean).join(', ')}` : ''}
+
+Your Service: ${service.title || 'Untitled'}
+Match Score: ${matchPercentage}%
+
+Please check the platform to respond to this service request.`,
+            reviewData: null, // No review data for service matches
+            notificationType: 'MESSAGE', // Using MESSAGE type for service matches, even though we're overloading this
+            metadata: {
+              serviceRequestId: serviceRequestId,
+              serviceId: service.id,
+              matchPercentage: matchPercentage,
+              serviceTitle: service.title,
+              customerName: customerName
+            }
+          });
+
+          notificationsSent++;
+          console.log(`✅ Notification sent successfully to ${providerInfo.user.email}`);
+
+          // Add small delay to avoid overwhelming the queue
+          if (highlyMatchingServices.length > 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+        } catch (notificationError) {
+          console.error(`❌ Failed to send notification for service ${service.id}:`, notificationError);
+          // Continue with other notifications even if one fails
+        }
+      }
+
+      console.log(`\n✅ NOTIFICATIONS SUMMARY:`);
+      console.log(`   Highly matching services found: ${highlyMatchingServices.length}`);
+      console.log(`   Notifications sent: ${notificationsSent}`);
+      console.log('='.repeat(60));
+    } else {
+      console.log('   ⚠️ No services matched above 60% threshold');
+    }
+
     console.log('='.repeat(80));
-    console.log('✅ AUTOMATIC MATCHING COMPLETED');
+    console.log('✅ AUTOMATIC MATCHING AND NOTIFICATIONS COMPLETED');
     console.log('='.repeat(80));
 
   } catch (error) {
