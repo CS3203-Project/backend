@@ -262,7 +262,7 @@ export class AdminService {
     const customerCount = await prisma.user.count({
       where: {
         role: 'USER',
-        isActive: true,
+        
       },
     });
 
