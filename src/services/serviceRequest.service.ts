@@ -318,6 +318,83 @@ export const deleteServiceRequest = async (id: string, userId: string) => {
   }
 };
 
+// New function to log matching services for newly created service requests
+// New function to log matching services for newly created service requests
+export const logMatchingServicesForNewRequest = async (serviceRequestId: string) => {
+  try {
+    console.log('='.repeat(80));
+    console.log('🎯 AUTOMATIC MATCHING: Finding services for new request');
+    console.log('🎯 Function called with ID:', serviceRequestId); // Debug log
+    console.log('='.repeat(80));
+
+    // Get the service request details including user info
+    const serviceRequest = await prisma.serviceRequest.findUnique({
+      where: { id: serviceRequestId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!serviceRequest) {
+      console.error('❌ Service request not found for automatic matching');
+      return;
+    }
+
+    console.log('👤 REQUEST DETAILS:');
+    console.log(`   Request ID: ${serviceRequest.id}`);
+    console.log(`   User ID: ${serviceRequest.userId}`);
+    console.log(`   User Email: ${serviceRequest.user?.email || 'N/A'}`);
+    console.log(`   User Name: ${serviceRequest.user?.firstName || ''} ${serviceRequest.user?.lastName || ''}`.trim() || 'N/A');
+    console.log(`   Title: ${serviceRequest.title || 'Untitled'}`);
+    console.log(`   Description: ${serviceRequest.description}`);
+    console.log(`   Created: ${serviceRequest.createdAt}`);
+
+    // Call the existing matching logic to get top matches
+    const matchesResult = await findMatchingServices(serviceRequestId, 1, 10); // Get top 10 matches
+
+    console.log('\n🔍 MATCHING RESULTS:');
+    console.log(`   Total matches found: ${matchesResult.matchingServices.length}`);
+    console.log(`   Total available services: ${matchesResult.pagination.total}`);
+
+    if (matchesResult.matchingServices.length > 0) {
+      console.log('\n🏆 TOP MATCHES:');
+      matchesResult.matchingServices.slice(0, 5).forEach((service, index) => {
+        console.log(`   ${index + 1}. "${service.title || 'Untitled'}"`);
+        console.log(`       Similarity: ${Math.round((service.similarity as number || 0) * 100)}%`);
+        console.log(`       Service ID: ${service.id}`);
+        console.log(`       Provider ID: ${service.providerId}`);
+        console.log(`       Price: ${service.price} ${service.currency}`);
+        if (service.address || service.city || service.state || service.country) {
+          const locationParts = [service.address, service.city, service.state, service.country].filter(Boolean);
+          console.log(`       Location: ${locationParts.join(', ')}`);
+        }
+        console.log('');
+      });
+
+      if (matchesResult.matchingServices.length > 5) {
+        console.log(`   ... and ${matchesResult.matchingServices.length - 5} more matches`);
+      }
+    } else {
+      console.log('   ⚠️ No matching services found');
+    }
+
+    console.log('='.repeat(80));
+    console.log('✅ AUTOMATIC MATCHING COMPLETED');
+    console.log('='.repeat(80));
+
+  } catch (error) {
+    console.error('❌ Error in automatic matching for new request:', error);
+    console.log('='.repeat(80));
+  }
+};
+
 // Define an interface that includes the combinedEmbedding field
 interface ServiceRequestWithEmbedding {
   id: string;
@@ -348,28 +425,28 @@ export const findMatchingServices = async (serviceRequestId: string, page = 1, l
 
     if (!serviceRequest.combinedEmbedding) {
       console.warn('Warning: No combined embedding found for this service request');
-      
+
       // If the embedding is missing, try to regenerate it
       try {
         console.log('Attempting to regenerate the missing embedding...');
         const embeddings = await generateServiceRequestEmbeddings(
-          serviceRequest.title || null, 
+          serviceRequest.title || null,
           serviceRequest.description
         );
-        
+
         // Update the embeddings in the database
         await prisma.$executeRaw`
-          UPDATE "ServiceRequest" 
-          SET 
-            "titleEmbedding" = ${embeddings.titleEmbedding ? embeddings.titleEmbedding : null}::vector(768), 
-            "descriptionEmbedding" = ${embeddings.descriptionEmbedding}::vector(768), 
+          UPDATE "ServiceRequest"
+          SET
+            "titleEmbedding" = ${embeddings.titleEmbedding ? embeddings.titleEmbedding : null}::vector(768),
+            "descriptionEmbedding" = ${embeddings.descriptionEmbedding}::vector(768),
             "combinedEmbedding" = ${embeddings.combinedEmbedding}::vector(768),
             "embeddingUpdatedAt" = ${embeddings.embeddingUpdatedAt}
           WHERE "id" = ${serviceRequest.id}
         `;
-        
+
         console.log('Successfully regenerated and updated embeddings');
-        
+
         // Update the serviceRequest object with the new embedding
         serviceRequest.combinedEmbedding = embeddings.combinedEmbedding;
       } catch (embeddingError) {

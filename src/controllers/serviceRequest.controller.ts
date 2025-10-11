@@ -1,11 +1,12 @@
 import type { Request, Response } from 'express';
-import { 
+import {
   createServiceRequest as createServiceRequestService,
   getServiceRequests,
   getServiceRequestById as getRequestByIdService,
   updateServiceRequest as updateRequestService,
   deleteServiceRequest as deleteRequestService,
-  findMatchingServices as findMatches
+  findMatchingServices as findMatches,
+  logMatchingServicesForNewRequest
 } from '../services/serviceRequest.service.js';
 
 /**
@@ -59,6 +60,20 @@ export const createServiceRequest = async (req: Request, res: Response) => {
     };
 
     const newRequest = await createServiceRequestService(requestData);
+    console.log('🎯 SERVICE REQUEST CREATED:', newRequest.id); // Debug log
+
+    // Fire-and-forget: Log matching services for the new request (don't wait)
+    if (newRequest.id) {
+      console.log('🚀 STARTING AUTOMATIC MATCHING LOG...'); // Debug log
+      logMatchingServicesForNewRequest(newRequest.id).then(() => {
+        console.log('✅ LOGGING COMPLETED SUCCESSFULLY');
+      }).catch(error => {
+        console.error('❌ LOGGING FAILED:', error);
+        // Don't fail the response if logging fails
+      });
+    } else {
+      console.log('❌ NO REQUEST ID - LOGGING SKIPPED');
+    }
 
     res.status(201).json({
       success: true,
