@@ -108,7 +108,7 @@ npx jest tests/Admin/routes/admin.route.test.ts
 ## Test Configuration
 
 ### Jest Configuration
-The Jest configuration is located in `jest.config.js` with the following key settings:
+The Jest configuration is located in `jest.config.cjs` with the following key settings:
 - TypeScript support with ts-jest
 - ESM module support
 - Test environment: Node.js
