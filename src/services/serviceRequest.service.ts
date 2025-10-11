@@ -433,26 +433,19 @@ export const sendNotificationsToMatchingProviders = async (serviceRequestId: str
             providerEmail: providerInfo.user.email,
             customerName: customerName,
             providerName: providerName,
-            message: `New service request matches your offering "${service.title || 'Untitled'}" with ${matchPercentage}% similarity.
-
-Request Details:
-- Title: ${serviceRequest.title || 'Untitled'}
-- Description: ${serviceRequest.description.substring(0, 200)}${serviceRequest.description.length > 200 ? '...' : ''}
-${serviceRequest.address || serviceRequest.city || serviceRequest.state || serviceRequest.country ?
-`- Location: ${[serviceRequest.address, serviceRequest.city, serviceRequest.state, serviceRequest.country].filter(Boolean).join(', ')}` : ''}
-
-Your Service: ${service.title || 'Untitled'}
-Match Score: ${matchPercentage}%
-
-Please check the platform to respond to this service request.`,
+            message: `A customer has posted a service request that matches your "${service.title || 'Untitled'}" service with ${matchPercentage}% similarity.`,
             reviewData: null, // No review data for service matches
-            notificationType: 'MESSAGE', // Using MESSAGE type for service matches, even though we're overloading this
+            notificationType: 'MESSAGE', // Using MESSAGE type for service matches in existing infrastructure
             metadata: {
               serviceRequestId: serviceRequestId,
               serviceId: service.id,
               matchPercentage: matchPercentage,
               serviceTitle: service.title,
-              customerName: customerName
+              customerName: customerName,
+              requestTitle: serviceRequest.title || 'Untitled',
+              requestDescription: serviceRequest.description.substring(0, 200) + (serviceRequest.description.length > 200 ? '...' : ''),
+              customerLocation: serviceRequest.address || serviceRequest.city || serviceRequest.state || serviceRequest.country ?
+                [serviceRequest.address, serviceRequest.city, serviceRequest.state, serviceRequest.country].filter(Boolean).join(', ') : null
             }
           });
 
