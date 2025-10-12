@@ -23,4 +23,6 @@ module.exports = {
   extensionsToTreatAsEsm: ['.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   testTimeout: 10000,
+  silent: false, // Keep false to see test names, but console is mocked in setup
+  verbose: true, // Show individual test results
 };
