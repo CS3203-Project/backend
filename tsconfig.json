@@ -5,7 +5,7 @@
     "module": "ESNext",
     "target": "ES2022",
     "moduleResolution": "Bundler",
-    "types": ["node"],
+    "types": ["node", "jest"],
     "lib": ["ES2022"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -15,7 +15,7 @@
     "declaration": true,
     "declarationMap": true,
     
-    "strict": false,
+    "strict": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
@@ -26,13 +26,12 @@
   "include": [
     "src/**/*",
     "index.ts",
-    "prisma/**/*"
+    "prisma/**/*",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "dist"
   ],
   "ts-node": {
     "esm": true

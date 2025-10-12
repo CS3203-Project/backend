@@ -1,0 +1,99 @@
+config:
+  target: "http://localhost:3000"
+  plugins:
+    metrics-by-endpoint: {}
+  
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 30
+      name: "Gradual ramp up"
+    - duration: 120
+      arrivalRate: 30
+      name: "Sustained load"
+
+  http:
+    timeout: 10
+  
+  variables:
+    testUserId: "{{ $randomNumber(1, 1000) }}"
+
+scenarios:
+  # Read-heavy scenarios (70% of traffic)
+  - name: "Browse Categories and Services"
+    weight: 40
+    flow:
+      - get:
+          url: "/api/category"
+          expect:
+            - statusCode: 200
+      
+      - think: 2  # User thinks for 2 seconds
+      
+      - get:
+          url: "/api/services"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$[0].id"
+              as: "serviceId"
+      
+      - think: 1
+      
+      - get:
+          url: "/api/services/{{ serviceId }}"
+          ifTrue: "serviceId"
+          expect:
+            - statusCode: 200
+
+  - name: "Browse Providers"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/providers"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$[0].id"
+              as: "providerId"
+      
+      - think: 2
+      
+      - get:
+          url: "/api/providers/{{ providerId }}"
+          ifTrue: "providerId"
+          expect:
+            - statusCode: 200
+
+  # Write operations (30% of traffic)
+  - name: "User Registration Flow"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/user/register"
+          json:
+            email: "loadtest{{ $randomNumber() }}@example.com"
+            password: "TestPass123!"
+            firstName: "Load"
+            lastName: "Test"
+            phoneNumber: "+1234567890"
+          expect:
+            - statusCode: [200, 201, 400, 409]  # Allow various responses
+          capture:
+            - json: "$.token"
+              as: "authToken"
+  
+  - name: "Review and Rating Operations"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/reviews"
+          expect:
+            - statusCode: 200
+      
+      - think: 1
+      
+      - get:
+          url: "/api/service-reviews"
+          expect:
+            - statusCode: 200
