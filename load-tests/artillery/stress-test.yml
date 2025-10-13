@@ -36,13 +36,15 @@ scenarios:
     weight: 100
     flow:
       - get:
-          url: "/api/category"
+          url: "/api/categories"
       
       - get:
           url: "/api/services"
       
       - get:
-          url: "/api/providers"
+          url: "/api/services/search"
+          qs:
+            query: "service"
       
       - get:
-          url: "/api/reviews"
+          url: "/api/reviews/user/1/received"

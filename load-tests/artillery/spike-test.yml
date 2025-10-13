@@ -28,7 +28,7 @@ scenarios:
     weight: 100
     flow:
       - get:
-          url: "/api/category"
+          url: "/api/categories"
           expect:
             - statusCode: [200, 429, 500, 503]  # Allow rate limiting and server errors
       

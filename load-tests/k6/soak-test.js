@@ -23,7 +23,7 @@ const BASE_URL = __ENV.API_URL || 'http://localhost:3000';
 
 export default function () {
   // Simulate realistic user behavior
-  const response1 = http.get(`${BASE_URL}/api/category`);
+  const response1 = http.get(`${BASE_URL}/api/categories`);
   check(response1, { 'categories OK': (r) => r.status === 200 });
   sleep(2);
 
