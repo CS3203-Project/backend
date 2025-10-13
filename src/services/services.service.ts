@@ -238,6 +238,11 @@ export const getServices = async (filters: ServiceFilters = {}) => {
             slug: true
           }
         },
+        serviceReviews: {
+          select: {
+            rating: true
+          }
+        },
         _count: {
           select: {
             serviceReviews: true
@@ -249,7 +254,31 @@ export const getServices = async (filters: ServiceFilters = {}) => {
       }
     });
 
-    return services;
+    // Calculate average rating for each service
+    const servicesWithRating = services.map(service => {
+      const reviewCount = service._count.serviceReviews;
+      let averageRating = 0;
+      
+      if (reviewCount > 0 && service.serviceReviews.length > 0) {
+        const totalRating = service.serviceReviews.reduce((sum, review) => sum + review.rating, 0);
+        averageRating = totalRating / service.serviceReviews.length;
+      }
+      
+      // Debug logging
+      console.log(`Service ${service.id} (${service.title}): reviewCount=${reviewCount}, averageRating=${averageRating}, reviews=${JSON.stringify(service.serviceReviews)}`);
+      
+      // Remove the serviceReviews array from the response to keep it clean
+      const { serviceReviews, ...serviceData } = service;
+      
+      return {
+        ...serviceData,
+        averageRating: averageRating > 0 ? parseFloat(averageRating.toFixed(1)) : 0,
+        reviewCount
+      };
+    });
+
+    console.log('Returning services with ratings:', servicesWithRating.map(s => ({ id: s.id, title: s.title, averageRating: s.averageRating, reviewCount: s.reviewCount })));
+    return servicesWithRating;
   } catch (error) {
     const errorMessage = typeof error === 'object' && error !== null && 'message' in error
       ? (error as { message: string }).message
@@ -289,6 +318,11 @@ export const getServiceById = async (serviceId: string) => {
             description: true
           }
         },
+        serviceReviews: {
+          select: {
+            rating: true
+          }
+        },
         _count: {
           select: {
             serviceReviews: true,
@@ -302,7 +336,27 @@ export const getServiceById = async (serviceId: string) => {
     console.log('Service found:', service?.id);
     console.log('Service videoUrl:', (service as any)?.videoUrl);
 
-    return service;
+    if (!service) {
+      return null;
+    }
+
+    // Calculate average rating
+    const reviewCount = service._count.serviceReviews;
+    let averageRating = 0;
+    
+    if (reviewCount > 0 && service.serviceReviews.length > 0) {
+      const totalRating = service.serviceReviews.reduce((sum, review) => sum + review.rating, 0);
+      averageRating = totalRating / service.serviceReviews.length;
+    }
+    
+    // Remove the serviceReviews array from the response to keep it clean
+    const { serviceReviews, ...serviceData } = service;
+    
+    return {
+      ...serviceData,
+      averageRating: averageRating > 0 ? parseFloat(averageRating.toFixed(1)) : 0,
+      reviewCount
+    };
   } catch (error) {
     const errorMessage = typeof error === 'object' && error !== null && 'message' in error
       ? (error as { message: string }).message
@@ -452,6 +506,11 @@ export const getServiceByConversationId = async (conversationId: string) => {
                 description: true
               }
             },
+            serviceReviews: {
+              select: {
+                rating: true
+              }
+            },
             _count: {
               select: {
                 serviceReviews: true,
@@ -467,7 +526,25 @@ export const getServiceByConversationId = async (conversationId: string) => {
       return null;
     }
 
-    return conversation.service;
+    const service = conversation.service;
+    
+    // Calculate average rating
+    const reviewCount = service._count.serviceReviews;
+    let averageRating = 0;
+    
+    if (reviewCount > 0 && service.serviceReviews.length > 0) {
+      const totalRating = service.serviceReviews.reduce((sum, review) => sum + review.rating, 0);
+      averageRating = totalRating / service.serviceReviews.length;
+    }
+    
+    // Remove the serviceReviews array from the response to keep it clean
+    const { serviceReviews, ...serviceData } = service;
+    
+    return {
+      ...serviceData,
+      averageRating: averageRating > 0 ? parseFloat(averageRating.toFixed(1)) : 0,
+      reviewCount
+    };
   } catch (error) {
     const errorMessage = typeof error === 'object' && error !== null && 'message' in error
       ? (error as { message: string }).message
@@ -536,11 +613,14 @@ export const searchServicesByLocation = async (options: LocationSearchOptions) =
         u."lastName" as provider_last_name,
         u."imageUrl" as provider_image_url,
         c.name as category_name,
-        c.slug as category_slug
+        c.slug as category_slug,
+        COALESCE(AVG(sr.rating), 0) as average_rating,
+        COUNT(sr.id) as review_count
       FROM "Service" s
       INNER JOIN "ServiceProvider" sp ON s."providerId" = sp.id
       INNER JOIN "User" u ON sp."userId" = u.id
       INNER JOIN "Category" c ON s."categoryId" = c.id
+      LEFT JOIN "ServiceReview" sr ON s.id = sr."serviceId"
       ${whereClause}
       AND s.latitude IS NOT NULL 
       AND s.longitude IS NOT NULL
@@ -549,6 +629,7 @@ export const searchServicesByLocation = async (options: LocationSearchOptions) =
         ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
         $3
       )
+      GROUP BY s.id, sp.id, u.id, c.id
       ORDER BY distance_km ASC
       LIMIT $4 OFFSET $5
     `;
@@ -597,6 +678,8 @@ export const searchServicesByLocation = async (options: LocationSearchOptions) =
       postalCode: service.postalCode,
       serviceRadiusKm: service.serviceRadiusKm ? parseFloat(service.serviceRadiusKm) : null,
       distance_km: parseFloat(service.distance_km),
+      averageRating: service.average_rating ? parseFloat(parseFloat(service.average_rating).toFixed(1)) : 0,
+      reviewCount: parseInt(service.review_count) || 0,
       createdAt: service.createdAt,
       updatedAt: service.updatedAt,
       provider: {
