@@ -246,12 +246,14 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
 
     let results: any[] = [];
     let searchType = '';
+    let hasServicesWithinRadius: boolean | undefined;
+    let searchMessage: string | undefined;
 
-    // Case 1: Both query and location provided - Semantic search with location filtering
+    // Case 1: Both query and location provided - Semantic search with optional location filtering
     if (query && typeof query === 'string' && query.trim() && locationProvided && userLat && userLng) {
       console.log('Hybrid search: semantic + location');
       searchType = 'hybrid';
-      
+
       // First get semantic search results
       const semanticSearchOptions: any = {
         query: query as string,
@@ -268,24 +270,26 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
       }
       const semanticResults = await semanticSearchService.searchServices(semanticSearchOptions);
 
-      // Then filter by location and add distance
-      const locationFilteredResults = [];
-      
+      let locationFilteredResults: any[] = [];
+      let hasServicesWithinRadius = false;
+      let message: string | undefined;
+
+      // Filter by location and add distance
       for (const service of semanticResults) {
         // Get full service data with location
         const fullService = await serviceService.getServiceById(service.id);
-        
+
         if (fullService && fullService.latitude && fullService.longitude) {
           // Calculate distance
           const distance = googleMapsService.calculateDistance(
-            userLat!, 
-            userLng!, 
-            fullService.latitude, 
+            userLat!,
+            userLng!,
+            fullService.latitude,
             fullService.longitude
           );
-          
-          // Check if within radius
-          if (distance <= parseFloat(radius as string)) {
+
+          // Check if within radius (only if radius > 0)
+          if (parseFloat(radius as string) <= 0 || distance <= parseFloat(radius as string)) {
             locationFilteredResults.push({
               ...service,
               latitude: fullService.latitude,
@@ -296,8 +300,11 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
               country: fullService.country,
               postalCode: fullService.postalCode,
               serviceRadiusKm: fullService.serviceRadiusKm,
-              distance_km: distance
+              distance_km: parseFloat(radius as string) > 0 ? distance : null // Only show distance if radius filtering active
             });
+            if (parseFloat(radius as string) > 0 && distance <= parseFloat(radius as string)) {
+              hasServicesWithinRadius = true;
+            }
           }
         } else if (includeWithoutLocation === 'true' || includeWithoutLocation === true) {
           // Include services without location (available everywhere)
@@ -306,6 +313,49 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
             distance_km: null // No distance for services without location
           });
         }
+      }
+
+      // If no services within radius, include ALL semantic results (not just location-less ones)
+      if (!hasServicesWithinRadius) {
+        console.log('No services found within radius, including all matching services');
+        locationFilteredResults = [];
+
+        for (const service of semanticResults) {
+          const fullService = await serviceService.getServiceById(service.id);
+
+          if (fullService) {
+            if (fullService.latitude && fullService.longitude) {
+              // Calculate distance even though outside radius
+              const distance = googleMapsService.calculateDistance(
+                userLat!,
+                userLng!,
+                fullService.latitude,
+                fullService.longitude
+              );
+
+              locationFilteredResults.push({
+                ...service,
+                latitude: fullService.latitude,
+                longitude: fullService.longitude,
+                address: fullService.address,
+                city: fullService.city,
+                state: fullService.state,
+                country: fullService.country,
+                postalCode: fullService.postalCode,
+                serviceRadiusKm: fullService.serviceRadiusKm,
+                distance_km: distance
+              });
+            } else {
+              // Services without location
+              locationFilteredResults.push({
+                ...service,
+                distance_km: null
+              });
+            }
+          }
+        }
+
+        message = parseFloat(radius as string) > 0 ? `No services found within ${radius}km radius. Showing all matching services.` : `Showing all matching services (no radius limit).`;
       }
 
       // Sort by similarity first, then by distance
@@ -322,6 +372,11 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
           return 0;
         })
         .slice(0, parseInt(limit as string));
+
+
+      // Store additional response data for later use
+      hasServicesWithinRadius = hasServicesWithinRadius;
+      searchMessage = message;
     }
     
     // Case 2: Only query provided - Pure semantic search
@@ -385,16 +440,26 @@ export const hybridSearchServices = async (req: Request, res: Response, next: Ne
       results = generalResults;
     }
 
+    const responseData: any = {
+      query: query || null,
+      location: locationProvided ? { latitude: userLat, longitude: userLng, radius } : null,
+      searchType,
+      results: results,
+      count: results.length
+    };
+
+    // Add additional data for hybrid searches
+    if (query && locationProvided) {
+      responseData.hasServicesWithinRadius = hasServicesWithinRadius;
+      if (searchMessage) {
+        responseData.message = searchMessage;
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: 'Search completed successfully',
-      data: {
-        query: query || null,
-        location: locationProvided ? { latitude: userLat, longitude: userLng, radius } : null,
-        searchType,
-        results: results,
-        count: results.length
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('Hybrid search error:', error);

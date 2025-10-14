@@ -28,11 +28,11 @@ const BASE_URL = __ENV.API_URL || 'http://localhost:3000';
 export default function () {
   // Mix of read operations to stress the system
   const endpoints = [
-    '/api/category',
+    '/api/categories',
     '/api/services',
-    '/api/providers',
-    '/api/reviews',
-    '/api/service-reviews',
+    '/api/services/search',
+    '/api/reviews/user/1/received',
+    '/api/service-reviews/service/1/detailed',
   ];
 
   // Randomly select an endpoint

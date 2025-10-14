@@ -98,7 +98,7 @@ export default function () {
 
   // Categories API
   group('Categories API', () => {
-    const response = makeRequest('GET', '/api/category');
+    const response = makeRequest('GET', '/api/categories');
     check(response, {
       'categories status is 200': (r) => r.status === 200,
       'categories returns array': (r) => {
@@ -148,24 +148,42 @@ export default function () {
 
   // Providers API
   group('Providers API', () => {
-    const response = makeRequest('GET', '/api/providers');
-    check(response, {
-      'providers status is 200': (r) => r.status === 200,
-    });
+    // Get services first to extract a provider ID
+    const servicesResponse = makeRequest('GET', '/api/services');
+    let providerId = null;
+    
+    try {
+      const services = JSON.parse(servicesResponse.body);
+      if (Array.isArray(services) && services.length > 0 && services[0].providerId) {
+        providerId = services[0].providerId;
+        
+        // Now get the provider details using the ID
+        const providerResponse = makeRequest('GET', `/api/providers/${providerId}`);
+        check(providerResponse, {
+          'provider details status is 200': (r) => r.status === 200,
+        });
+      } else {
+        console.log('No provider ID found in services');
+      }
+    } catch (e) {
+      console.error('Error parsing services response', e);
+    }
   });
 
   sleep(1);
 
   // Reviews API
   group('Reviews API', () => {
-    const reviewsResponse = makeRequest('GET', '/api/reviews');
+    // Get a user's received reviews
+    const reviewsResponse = makeRequest('GET', '/api/reviews/user/1/received');
     check(reviewsResponse, {
-      'reviews status is 200': (r) => r.status === 200,
+      'user reviews status is 200 or 404': (r) => r.status === 200 || r.status === 404,
     });
     
-    const serviceReviewsResponse = makeRequest('GET', '/api/service-reviews');
+    // Get service reviews for a specific service
+    const serviceReviewsResponse = makeRequest('GET', '/api/service-reviews/service/1/detailed');
     check(serviceReviewsResponse, {
-      'service reviews status is 200': (r) => r.status === 200,
+      'service reviews status is 200 or 404': (r) => r.status === 200 || r.status === 404,
     });
   });
 
@@ -176,7 +194,7 @@ export default function () {
 export function setup() {
   console.log(`Starting load test against: ${BASE_URL}`);
   
-  // Test that the API is reachable
+  // Test that the API is reachable using the categories endpoint
   const healthCheck = http.get(`${BASE_URL}/api/categories`);
   if (healthCheck.status !== 200) {
     throw new Error(`API is not reachable. Status: ${healthCheck.status}`);

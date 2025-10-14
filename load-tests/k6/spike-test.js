@@ -23,7 +23,7 @@ export const options = {
 const BASE_URL = __ENV.API_URL || 'http://localhost:3000';
 
 export default function () {
-  const response = http.get(`${BASE_URL}/api/category`, {
+  const response = http.get(`${BASE_URL}/api/categories`, {
     timeout: '15s',
   });
 
