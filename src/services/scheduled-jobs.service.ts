@@ -9,7 +9,7 @@ export class ScheduledJobsService {
    */
   startAllJobs(): void {
     this.startBookingReminderJob();
-    console.log('=====> All scheduled jobs started');
+    console.log('🚀 All scheduled jobs started');
   }
 
   /**
@@ -30,7 +30,7 @@ export class ScheduledJobsService {
     // Run every hour at minute 0 (e.g., 9:00, 10:00, 11:00, etc.)
     this.bookingReminderJob = cron.schedule('55 * * * *', async () => {
       try {
-        console.log('=====>Running booking reminder job...');
+        console.log('🔔 Running booking reminder job...');
         await bookingReminderService.sendRemindersForUpcomingBookings();
         console.log('✅ Booking reminder job completed');
       } catch (error) {
@@ -38,7 +38,7 @@ export class ScheduledJobsService {
       }
     });
 
-    console.log('=====>Booking reminder job scheduled (runs every hour)');
+    console.log('🔔 Booking reminder job scheduled (runs every hour)');
   }
 
   /**
