@@ -41,6 +41,7 @@ await generatePrismaClient();
 
 import { prisma } from './src/utils/database';
 import { queueService } from './src/services/queue.service';
+import { scheduledJobsService } from './src/services/scheduled-jobs.service';
 import express, { type Application } from 'express';
 import cors, { type CorsOptions } from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -134,11 +135,35 @@ async function startServer() {
     console.error('=====> RabbitMQ connection failed, emails will not be sent:', error);
     // Don't exit - continue without email functionality
   }
+
+  // Start scheduled jobs
+  try {
+    scheduledJobsService.startAllJobs();
+    console.log('=====> Scheduled jobs started');
+  } catch (error) {
+    console.error('=====> Failed to start scheduled jobs:', error);
+    // Don't exit - continue without scheduled jobs
+  }
   
   app.listen(PORT, () => {
     console.log(`=====> Server running on port ${PORT}`);
   });
 }
+
+// Graceful shutdown for scheduled jobs
+process.on('SIGINT', async () => {
+  console.log('==xx== Received SIGINT, shutting down scheduled jobs...');
+  scheduledJobsService.stopAllJobs();
+  await queueService.close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('==xx== Received SIGTERM, shutting down scheduled jobs...');
+  scheduledJobsService.stopAllJobs();
+  await queueService.close();
+  process.exit(0);
+});
 
 // Start the server
 startServer().catch((error) => {
