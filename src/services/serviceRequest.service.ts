@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import { embeddingService } from './embedding.service.js';
 import { queueService } from './queue.service.js';
-
-const prisma = new PrismaClient();
+import { prisma } from '../utils/database.js';
 
 export interface CreateServiceRequestData {
   userId: string;
