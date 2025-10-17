@@ -255,7 +255,8 @@ export const getProviderById = async (id: string) => {
           firstName: true,
           lastName: true,
           imageUrl: true,
-          role: true
+          role: true,
+          phone: true
         }
       },
       services: {
