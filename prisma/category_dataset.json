@@ -289,6 +289,62 @@
           "description": "Professional business documents and proposals"
         }
       ]
+    },
+    {
+      "name": "Art",
+      "slug": "art",
+      "description": "Professional art services including creation, restoration, and art education",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Fine Art",
+          "slug": "fine-art",
+          "description": "Custom paintings, sculptures, and art creations"
+        },
+        {
+          "name": "Art Restoration",
+          "slug": "art-restoration",
+          "description": "Restoration and conservation of artwork"
+        },
+        {
+          "name": "Art Education",
+          "slug": "art-education",
+          "description": "Art classes, workshops, and tutoring"
+        },
+        {
+          "name": "Digital Art",
+          "slug": "digital-art",
+          "description": "Digital illustration and computer graphics"
+        }
+      ]
+    },
+    {
+      "name": "Innovation",
+      "slug": "innovation",
+      "description": "Technology consulting and innovation services",
+      "parentId": null,
+      "subcategories": [
+        {
+          "name": "Tech Consulting",
+          "slug": "tech-consulting",
+          "description": "Technology strategy and implementation consulting"
+        },
+        {
+          "name": "Product Innovation",
+          "slug": "product-innovation",
+          "description": "Product development and innovation services"
+        },
+        {
+          "name": "Research & Development",
+          "slug": "research-development",
+          "description": "R&D services and prototype development"
+        },
+        {
+          "name": "Innovation Strategy",
+          "slug": "innovation-strategy",
+          "description": "Strategic innovation planning and execution"
+        }
+      ]
     }
   ]
 }

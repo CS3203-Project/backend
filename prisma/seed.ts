@@ -4,11 +4,20 @@ import { hashPassword } from "../src/utils/hash.js";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from 'url';
+import { config } from "dotenv";
+
+// Load environment variables
+config({ path: "../.env" });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient();
+
+// Debug logging for database connection
+console.log("🔍 DEBUG: DATABASE_URL =", process.env.DATABASE_URL);
+console.log("🔍 DEBUG: Current working directory =", process.cwd());
+console.log("🔍 DEBUG: Environment =", process.env.NODE_ENV || 'undefined');
 
 async function seed() {
   console.log("Starting seed process...");

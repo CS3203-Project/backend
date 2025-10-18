@@ -1,4 +1,10 @@
-import 'dotenv/config';                
+import 'dotenv/config';
+
+// Debug logging for backend database connection
+console.log("🔍 BACKEND: DATABASE_URL =", process.env.DATABASE_URL);
+console.log("🔍 BACKEND: Current working directory =", process.cwd());
+console.log("🔍 BACKEND: Environment =", process.env.NODE_ENV || 'undefined');
+
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
