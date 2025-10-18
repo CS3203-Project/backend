@@ -58,6 +58,7 @@ import serviceRequestRoutes from './src/routes/serviceRequest.route';
 import paymentRoutes from './src/routes/payment.route';
 import notificationRoutes from './src/routes/notification.route';
 import { chatbotRoutes, CHATBOT_MODULE_INFO } from './src/modules/chatbot/index';
+import scheduleRoutes from './src/routes/schedule.route';
 
 // Simple database test function
 async function testDatabaseConnection() {
@@ -112,6 +113,7 @@ app.use('/api/service-requests', serviceRequestRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/schedule', scheduleRoutes);
 
 const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
